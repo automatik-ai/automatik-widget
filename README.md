@@ -93,4 +93,6 @@ update widget_stores set active = true where store_id = 'alto-mate';
 
 | Versión | Fecha      | Cambios                                               |
 |---------|------------|-------------------------------------------------------|
+| 1.1.0   | 2026-05-29 | Card [[ORDER_LOOKUP]] — formulario email + nro orden  |
+| 1.0.1   | 2026-05-29 | Fix posicionamiento CSS, fix async loader             |
 | 1.0.0   | 2026-05-29 | Migración inicial desde bloque embebido en theme.liquid |

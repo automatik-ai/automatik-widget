@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.0.0
+ * Versión: 1.1.0
  * Fecha:   2026-05-29
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
@@ -12,6 +12,16 @@
 /* ── Reset básico ───────────────────────────────────────── */
 .n8n-chat { font-size: 16px !important; }
 .n8n-chat * { box-sizing: border-box; }
+
+/* ── Contenedor raíz — posición fija sobre la página ───── */
+.n8n-chat {
+  position: fixed !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+.n8n-chat > * { pointer-events: auto !important; }
 
 /* ── Ventana principal ──────────────────────────────────── */
 .chat-window {
@@ -261,6 +271,80 @@ body.flor-chat-open .chat-window-toggle {
   82%  { transform: scale(0.93) rotate(-2deg); }
   100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+
+/* ── Tarjeta consulta de pedido ─────────────────────────── */
+.flor-order-card {
+  width: min(290px, 84%);
+  margin: 7px 18px 8px;
+  background: #fff;
+  border: 1px solid #dbece2;
+  border-radius: 16px;
+  padding: 14px 14px 16px;
+  box-shadow: 0 7px 18px rgba(22,92,60,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.flor-order-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #21352b;
+  line-height: 1.3;
+}
+.flor-order-desc {
+  font-size: 12.5px;
+  color: #5a7065;
+  line-height: 1.45;
+  margin-top: -2px;
+}
+.flor-order-field { display: flex; flex-direction: column; gap: 4px; }
+.flor-order-label { font-size: 12px; font-weight: 600; color: #21352b; }
+.flor-order-req   { color: #d94a4a; }
+
+.flor-order-input {
+  border: 1px solid #cfe4d8 !important;
+  border-radius: 10px !important;
+  padding: 9px 11px !important;
+  font-size: 13px !important;
+  outline: none !important;
+  background: #eef8f2 !important;
+  width: 100%;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.flor-order-input:focus {
+  border-color: #37ae76 !important;
+  box-shadow: 0 0 0 2px rgba(55,174,118,0.13) !important;
+}
+.flor-order-input--error {
+  border-color: #d94a4a !important;
+  box-shadow: 0 0 0 2px rgba(217,74,74,0.13) !important;
+}
+.flor-order-input:disabled { opacity: 0.6; cursor: default; }
+
+.flor-order-error {
+  display: none;
+  font-size: 11px;
+  color: #d94a4a;
+  font-weight: 500;
+}
+.flor-order-error--visible { display: block; }
+
+.flor-order-note  { font-size: 11px; color: #8a9e93; margin-top: -2px; }
+
+.flor-order-btn {
+  background: linear-gradient(135deg, #43bd86, #28955f);
+  border: 0;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 0;
+  width: 100%;
+  transition: opacity 0.15s;
+  margin-top: 2px;
+}
+.flor-order-btn:disabled { opacity: 0.45; cursor: default; }
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
