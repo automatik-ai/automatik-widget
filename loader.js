@@ -1,14 +1,14 @@
 /**
  * automatik-widget / loader.js
- * Versión: 1.0.0
+ * Versión: 1.0.1
  * Fecha:   2026-05-29
  * Descripción: Loader del widget Flor. Consulta la Edge Function de Supabase
  *              para verificar si la tienda está activa antes de cargar el widget.
  *              Si active=false, no carga nada — control de acceso sin tocar Shopify.
  *
- * Uso en theme.liquid:
+ * Uso en theme.liquid (sin async — necesario para document.currentScript):
  *   <script src="https://automatik-ai.github.io/automatik-widget/loader.js"
- *     data-store="alto-mate" async></script>
+ *     data-store="alto-mate"></script>
  *
  * Para agregar un cliente nuevo: insertar fila en widget_stores en Supabase automatik-platform.
  * Para cortar acceso: cambiar active=false en esa tabla.
@@ -21,8 +21,15 @@
   var WIDGET_JS  = 'https://automatik-ai.github.io/automatik-widget/widget.js?v=1.0.0';
   var WIDGET_CSS = 'https://automatik-ai.github.io/automatik-widget/widget.css?v=1.0.0';
 
-  var script   = document.currentScript;
-  var storeId  = script ? script.getAttribute('data-store') : null;
+  // document.currentScript no funciona con async — el script NO debe tener async
+  var script  = document.currentScript;
+  var storeId = script ? script.getAttribute('data-store') : null;
+
+  // Fallback: buscar el script por src si currentScript no está disponible
+  if (!storeId) {
+    var scripts = document.querySelectorAll('script[data-store]');
+    if (scripts.length) storeId = scripts[scripts.length - 1].getAttribute('data-store');
+  }
 
   if (!storeId) return;
 
