@@ -31,7 +31,7 @@ Reemplazar TODO el bloque `{% if true %} ... {% endif %}` por esto:
 
 ```liquid
 {% if true %}
-<link rel="stylesheet" href="https://automatik-ai.github.io/automatik-widget/widget.css?v=1.0.0" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@n8n/chat/style.css" />
 {% if request.page_type == 'product' %}
 <style>
   .chat-window-toggle { opacity: 0 !important; pointer-events: none !important; }
@@ -46,11 +46,24 @@ window.FlorShopifyConfig = {
   pageType:         {{ request.page_type | json }}
 };
 </script>
-<script type="module" src="https://automatik-ai.github.io/automatik-widget/widget.js?v=1.0.0" async></script>
+<script src="https://automatik-ai.github.io/automatik-widget/loader.js?v=1.0.1" data-store="alto-mate"></script>
 {% endif %}
 ```
 
-> El parámetro `?v=1.0.0` fuerza cache-bust en cada versión. Actualizarlo junto al bump de versión.
+> ⚠️ El CSS de n8n DEBE estar en el HTML antes del loader — si se carga dinámicamente el widget se posiciona mal.
+> El parámetro `?v=1.0.1` fuerza cache-bust. Actualizarlo junto al bump de versión.
+
+## Control de acceso
+
+Para desactivar un cliente sin tocar su Shopify:
+```sql
+update widget_stores set active = false where store_id = 'alto-mate';
+```
+
+Para reactivar:
+```sql
+update widget_stores set active = true where store_id = 'alto-mate';
+```
 
 ---
 
