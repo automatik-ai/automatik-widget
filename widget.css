@@ -348,10 +348,10 @@ body.flor-chat-open .chat-window-toggle {
 
 /* ── Burbuja preview carrito ────────────────────────────── */
 .flor-preview-bubble {
-  position: fixed;
-  bottom: 90px;
-  right: 20px;
-  background: #fff;
+  position: fixed !important;
+  bottom: 90px !important;
+  right: 20px !important;
+  background: #fff !important;
   border: 1px solid #deeee5;
   border-radius: 16px 16px 4px 16px;
   padding: 11px 15px;
@@ -359,8 +359,8 @@ body.flor-chat-open .chat-window-toggle {
   box-shadow: 0 6px 22px rgba(22,92,60,0.14);
   font-size: 13px;
   line-height: 1.45;
-  color: #232825;
-  z-index: 10000;
+  color: #232825 !important;
+  z-index: 2147483647 !important;
   cursor: pointer;
   transform-origin: bottom right;
   animation: florPreviewIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
