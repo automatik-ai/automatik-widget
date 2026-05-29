@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.0
+ * Versión: 1.1.1
  * Fecha:   2026-05-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -306,8 +306,8 @@ function injectOrderLookup() {
     const card = document.createElement('div');
     card.className = 'flor-order-card';
     card.innerHTML = `
-      <div class="flor-order-title">📦 Consultar estado de tu pedido</div>
-      <div class="flor-order-desc">Para encontrar tu pedido y proteger tu información, necesitamos verificar tu identidad. 🔒</div>
+      <div class="flor-order-title">Consultar estado de tu pedido</div>
+      <div class="flor-order-desc">Para encontrar tu pedido necesitamos verificar tu identidad.</div>
       <div class="flor-order-field">
         <label class="flor-order-label">Email <span class="flor-order-req">*</span></label>
         <input class="flor-order-input" type="email" placeholder="tu@email.com" autocomplete="email" />
@@ -400,8 +400,9 @@ new MutationObserver(() => {
   hideBranding();
   autoStart();
   injectQuickReplies();
+  injectOrderLookup();
   clearTimeout(florCardDebounce);
-  florCardDebounce = setTimeout(() => { injectProductCards(); injectOrderLookup(); }, 500);
+  florCardDebounce = setTimeout(injectProductCards, 500);
   trackUserMessages();
   animateToggle();
   setupChatStateObserver();
