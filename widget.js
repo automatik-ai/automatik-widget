@@ -455,8 +455,6 @@ new MutationObserver(() => {
       bubble.remove();
       openChat();
     });
-    // Auto-dismiss after 14 segundos si no interactúa
-    setTimeout(() => bubble.remove(), 14000);
     document.body.appendChild(bubble);
   }
 
@@ -541,6 +539,7 @@ new MutationObserver(() => {
     } else if (!abierto && carritoAbierto) {
       carritoAbierto = false;
       clearTimeout(cartTimer);
+      document.querySelector('.flor-preview-bubble')?.remove();
     }
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
 })();
