@@ -1,6 +1,6 @@
 /**
  * automatik-widget / loader.js
- * Versión: 1.0.1
+ * Versión: 1.1.2
  * Fecha:   2026-05-29
  * Descripción: Loader del widget Flor. Consulta la Edge Function de Supabase
  *              para verificar si la tienda está activa antes de cargar el widget.
@@ -18,8 +18,8 @@
   'use strict';
 
   var CONFIG_URL = 'https://yvwxjpujeekphepnskjd.supabase.co/functions/v1/widget-config';
-  var WIDGET_JS  = 'https://automatik-ai.github.io/automatik-widget/widget.js?v=1.0.0';
-  var WIDGET_CSS = 'https://automatik-ai.github.io/automatik-widget/widget.css?v=1.0.0';
+  var WIDGET_JS  = 'https://automatik-ai.github.io/automatik-widget/widget.js?v=1.1.2';
+  var WIDGET_CSS = 'https://automatik-ai.github.io/automatik-widget/widget.css?v=1.1.2';
 
   // document.currentScript no funciona con async — el script NO debe tener async
   var script  = document.currentScript;
