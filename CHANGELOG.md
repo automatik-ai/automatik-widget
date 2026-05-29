@@ -1,5 +1,29 @@
 # Changelog — automatik-widget
 
+## v1.1.0 — 2026-05-29
+
+### Cambios
+- `widget.js`: nueva función `injectOrderLookup()` — detecta marcador `[[ORDER_LOOKUP]]` en mensajes del bot
+- `widget.js`: renderiza card con campos email + número de orden (ambos obligatorios)
+- `widget.js`: botón "Consultar pedido" deshabilitado hasta que ambos campos tengan valor
+- `widget.js`: validación client-side — borde rojo + mensaje de error si campo vacío al intentar submit
+- `widget.js`: on submit — manda UN mensaje combinado ("Mi email es X y mi número de orden es Y")
+- `widget.js`: trackea evento `consulta_pedido_enviada` en analytics
+- `widget.css`: estilos para `.flor-order-card`, campos, errores, botón
+
+### Cómo funciona
+1. Bot detecta intención de seguimiento → responde exactamente con `[[ORDER_LOOKUP]]`
+2. widget.js detecta el marcador → elimina el texto → renderiza la card debajo del bubble
+3. Usuario completa email + nro de orden → click "Consultar pedido"
+4. Se manda un único mensaje al bot con los dos datos
+5. Bot ejecuta `consultar_estado_pedido` una sola vez → 0 ejecuciones extra de n8n
+
+### Cambio requerido en el prompt de Flor (n8n)
+Agregar en la sección de seguimiento de pedido:
+> Cuando el usuario pregunta por el estado de su pedido (seguimiento, tracking, dónde está mi pedido, etc.), respondé EXACTAMENTE con esto y nada más: `[[ORDER_LOOKUP]]`. No pidas email ni número de orden en texto.
+
+---
+
 ## v1.0.1 — 2026-05-29
 
 ### Cambios

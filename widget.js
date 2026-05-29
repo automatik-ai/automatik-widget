@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.0.0
+ * Versión: 1.1.0
  * Fecha:   2026-05-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -286,6 +286,85 @@ async function injectProductCards() {
   });
 }
 
+/* ── Tarjeta consulta de pedido ─────────────────────────── */
+const ORDER_LOOKUP_PATTERN = /\[\[ORDER_LOOKUP\]\]/i;
+
+function injectOrderLookup() {
+  document.querySelectorAll('.chat-message-from-bot:not([data-flor-order-checked])').forEach(message => {
+    const markdown = message.querySelector('.chat-message-markdown');
+    if (!markdown) return;
+    if (!ORDER_LOOKUP_PATTERN.test(markdown.textContent)) {
+      message.dataset.florOrderChecked = '1';
+      return;
+    }
+    message.dataset.florOrderChecked = '1';
+
+    markdown.textContent = markdown.textContent.replace(ORDER_LOOKUP_PATTERN, '').trim();
+    if (!markdown.textContent) markdown.style.display = 'none';
+    message.classList.add('flor-has-card');
+
+    const card = document.createElement('div');
+    card.className = 'flor-order-card';
+    card.innerHTML = `
+      <div class="flor-order-title">📦 Consultar estado de tu pedido</div>
+      <div class="flor-order-desc">Para encontrar tu pedido y proteger tu información, necesitamos verificar tu identidad. 🔒</div>
+      <div class="flor-order-field">
+        <label class="flor-order-label">Email <span class="flor-order-req">*</span></label>
+        <input class="flor-order-input" type="email" placeholder="tu@email.com" autocomplete="email" />
+        <span class="flor-order-error">Este campo es obligatorio</span>
+      </div>
+      <div class="flor-order-field">
+        <label class="flor-order-label">Número de orden <span class="flor-order-req">*</span></label>
+        <input class="flor-order-input" type="text" placeholder="ej: 1234" autocomplete="off" />
+        <span class="flor-order-error">Este campo es obligatorio</span>
+      </div>
+      <div class="flor-order-note">* Campos obligatorios</div>
+      <button class="flor-order-btn" type="button" disabled>Consultar pedido</button>
+    `;
+
+    const [emailInput, orderInput] = card.querySelectorAll('.flor-order-input');
+    const [emailError, orderError] = card.querySelectorAll('.flor-order-error');
+    const submitBtn = card.querySelector('.flor-order-btn');
+
+    function checkFields() {
+      submitBtn.disabled = !(emailInput.value.trim() && orderInput.value.trim());
+    }
+    emailInput.addEventListener('input', checkFields);
+    orderInput.addEventListener('input', checkFields);
+
+    function clearError(input, errorEl) {
+      input.classList.remove('flor-order-input--error');
+      errorEl.classList.remove('flor-order-error--visible');
+    }
+    emailInput.addEventListener('input', () => clearError(emailInput, emailError));
+    orderInput.addEventListener('input', () => clearError(orderInput, orderError));
+
+    submitBtn.addEventListener('click', () => {
+      let valid = true;
+      if (!emailInput.value.trim()) {
+        emailInput.classList.add('flor-order-input--error');
+        emailError.classList.add('flor-order-error--visible');
+        valid = false;
+      }
+      if (!orderInput.value.trim()) {
+        orderInput.classList.add('flor-order-input--error');
+        orderError.classList.add('flor-order-error--visible');
+        valid = false;
+      }
+      if (!valid) return;
+
+      submitBtn.disabled    = true;
+      submitBtn.textContent = 'Consultando...';
+      card.querySelectorAll('.flor-order-input').forEach(i => i.disabled = true);
+
+      sendFlorMessage(`Mi email es ${emailInput.value.trim()} y mi número de orden es ${orderInput.value.trim()}`);
+      trackFlorEvent('consulta_pedido_enviada');
+    });
+
+    message.appendChild(card);
+  });
+}
+
 /* ── Tracking mensajes usuario ──────────────────────────── */
 function trackUserMessages() {
   document.querySelectorAll('.chat-message-from-user:not([data-flor-tracked])').forEach(msg => {
@@ -322,7 +401,7 @@ new MutationObserver(() => {
   autoStart();
   injectQuickReplies();
   clearTimeout(florCardDebounce);
-  florCardDebounce = setTimeout(injectProductCards, 500);
+  florCardDebounce = setTimeout(() => { injectProductCards(); injectOrderLookup(); }, 500);
   trackUserMessages();
   animateToggle();
   setupChatStateObserver();
