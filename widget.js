@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.2
+ * Versión: 1.1.3
  * Fecha:   2026-05-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -145,9 +145,12 @@ function setupChatStateObserver() {
   const update = () => {
     const isOpen = getComputedStyle(chatWin).display !== 'none' && chatWin.offsetHeight > 0;
     document.body.classList.toggle('flor-chat-open', isOpen);
-    if (isOpen && !chatWin.dataset.florOpenTracked) {
-      chatWin.dataset.florOpenTracked = '1';
-      trackFlorEvent('chat_abierto');
+    if (isOpen) {
+      document.querySelector('.flor-preview-bubble')?.remove();
+      if (!chatWin.dataset.florOpenTracked) {
+        chatWin.dataset.florOpenTracked = '1';
+        trackFlorEvent('chat_abierto');
+      }
     }
   };
   update();
@@ -429,7 +432,7 @@ new MutationObserver(() => {
 
 /* ── Trigger carrito inactivo ───────────────────────────── */
 (function () {
-  const CART_TIMEOUT_MS = 120_000;
+  const CART_TIMEOUT_MS = 210_000; // 3.5 minutos
   const STORAGE_KEY     = 'flor_trigger_fired';
 
   function wasFired(tipo) {
@@ -441,6 +444,20 @@ new MutationObserver(() => {
       data[tipo] = true;
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (_) {}
+  }
+
+  function showPreviewBubble(msg) {
+    if (document.querySelector('.flor-preview-bubble')) return;
+    const bubble = document.createElement('div');
+    bubble.className = 'flor-preview-bubble';
+    bubble.textContent = msg;
+    bubble.addEventListener('click', () => {
+      bubble.remove();
+      openChat();
+    });
+    // Auto-dismiss after 14 segundos si no interactúa
+    setTimeout(() => bubble.remove(), 14000);
+    document.body.appendChild(bubble);
   }
 
   function showBadge() {
@@ -504,8 +521,8 @@ new MutationObserver(() => {
     markAssistedCart();
     trackFlorEvent('aviso_carrito_mostrado', { trigger_type: tipo });
     showBadge();
-    openChat();
-    injectBotMessage(msg);
+    showPreviewBubble(msg);  // burbuja chiquita, no abre el chat
+    injectBotMessage(msg);   // mensaje ya listo adentro cuando abra
   }
 
   let cartTimer      = null;
