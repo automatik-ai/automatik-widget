@@ -451,6 +451,7 @@ new MutationObserver(() => {
     const bubble = document.createElement('div');
     bubble.className = 'flor-preview-bubble';
     bubble.textContent = msg;
+    bubble.style.cssText = 'position:fixed!important;bottom:90px!important;right:20px!important;z-index:2147483647!important';
     bubble.addEventListener('click', () => {
       bubble.remove();
       openChat();
