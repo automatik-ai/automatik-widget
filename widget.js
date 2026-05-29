@@ -432,7 +432,7 @@ new MutationObserver(() => {
 
 /* ── Trigger carrito inactivo ───────────────────────────── */
 (function () {
-  const CART_TIMEOUT_MS = 210_000; // 3.5 minutos
+  const CART_TIMEOUT_MS = 120_000; // 2 minutos
   const STORAGE_KEY     = 'flor_trigger_fired';
 
   function wasFired(tipo) {
