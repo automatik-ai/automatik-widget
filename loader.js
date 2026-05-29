@@ -38,7 +38,13 @@
     .then(function (config) {
       if (!config.active) return;
 
-      // Inyectar CSS
+      // Inyectar CSS base de n8n (necesario para posicionamiento y estructura)
+      var linkN8n  = document.createElement('link');
+      linkN8n.rel  = 'stylesheet';
+      linkN8n.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/style.css';
+      document.head.appendChild(linkN8n);
+
+      // Inyectar CSS custom (sobreescribe estilos n8n con los de Alto Maté)
       var link  = document.createElement('link');
       link.rel  = 'stylesheet';
       link.href = WIDGET_CSS;
