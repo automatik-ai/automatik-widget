@@ -412,15 +412,20 @@ body.flor-chat-open .chat-window-toggle {
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
   .chat-window-wrapper {
-    right: 10px !important;
+    left: 50% !important;
+    right: auto !important;
     bottom: 14px !important;
-    max-width: calc(100vw - 20px) !important;
+    width: calc(100vw - 32px) !important;
+    max-width: none !important;
+    transform: translateX(-50%) !important;
   }
   .chat-window {
-    width: calc(100vw - 20px) !important;
-    height: min(650px, calc(100vh - 112px)) !important;
-    max-height: 600px !important;
-    margin-bottom: 12px !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: min(560px, calc(100vh - 170px)) !important;
+    height: min(560px, calc(100dvh - 170px)) !important;
+    max-height: 560px !important;
+    margin-bottom: 10px !important;
   }
   .flor-preview-bubble { right: 14px !important; bottom: 82px !important; max-width: min(250px, calc(100vw - 28px)); }
 }
