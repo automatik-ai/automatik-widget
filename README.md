@@ -46,7 +46,7 @@ window.FlorShopifyConfig = {
   pageType:         {{ request.page_type | json }}
 };
 </script>
-<script src="https://automatik-ai.github.io/automatik-widget/loader.js?v=1.1.4" data-store="alto-mate"></script>
+<script src="https://automatik-ai.github.io/automatik-widget/loader.js?v=1.1.5" data-store="alto-mate"></script>
 {% endif %}
 ```
 
