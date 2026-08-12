@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.1.4
+ * Versión: 1.1.5
  * Fecha:   2026-05-29
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
@@ -26,16 +26,16 @@
 /* n8n positions this wrapper, not the chat window itself. Keeping the
    offset here prevents the panel from touching the viewport edge. */
 .chat-window-wrapper {
-  right: 24px !important;
-  bottom: 20px !important;
+  right: 40px !important;
+  bottom: 28px !important;
   left: auto !important;
-  max-width: calc(100vw - 48px) !important;
+  max-width: calc(100vw - 80px) !important;
 }
 
 /* ── Ventana principal ──────────────────────────────────── */
 .chat-window {
   width: 410px !important;
-  max-width: calc(100vw - 48px) !important;
+  max-width: calc(100vw - 80px) !important;
   height: 610px !important;
   border: 0 !important;
   outline: 0 !important;
@@ -383,7 +383,7 @@ body.flor-chat-open .chat-window-toggle {
 .flor-preview-bubble {
   position: fixed !important;
   bottom: 90px !important;
-  right: 24px !important;
+  right: 40px !important;
   background: #fff !important;
   border: 1px solid #deeee5;
   border-radius: 16px 16px 4px 16px;

@@ -1,5 +1,14 @@
 # Changelog — automatik-widget
 
+## v1.1.5 — 2026-08-12
+
+### Cambios
+- `widget.css`: margen desktop aumentado para que el panel no quede pegado al borde.
+- `widget.js`: trigger de carrito detecta clase Kaching en `html` y `body`.
+- `widget.js`: trigger sincroniza estado al cargar y reintenta inyección si el chat aún no está montado.
+- `loader.js`: cache-bust actualizado a `1.1.5`.
+- El trigger se reinicia al cerrar el carrito y usa una clave nueva para no quedar bloqueado por sesiones anteriores.
+
 ## v1.1.4 — 2026-08-11
 
 ### Cambios

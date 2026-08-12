@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.4
+ * Versión: 1.1.5
  * Fecha:   2026-05-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -482,7 +482,7 @@ new MutationObserver(() => {
 /* ── Trigger carrito inactivo ───────────────────────────── */
 (function () {
   const CART_TIMEOUT_MS = 120_000; // 2 minutos
-  const STORAGE_KEY     = 'flor_trigger_fired';
+  const STORAGE_KEY     = 'flor_trigger_fired_v2';
 
   function wasFired(tipo) {
     try { return !!JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}')[tipo]; } catch (_) { return false; }
@@ -491,6 +491,13 @@ new MutationObserver(() => {
     try {
       const data = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
       data[tipo] = true;
+      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (_) {}
+  }
+  function clearFired(tipo) {
+    try {
+      const data = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}');
+      delete data[tipo];
       sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     } catch (_) {}
   }
@@ -540,9 +547,12 @@ new MutationObserver(() => {
   }
 
   function injectBotMessage(msg) {
-    setTimeout(() => {
+    const attempt = (remaining) => {
       const lista = document.querySelector('.chat-messages-list');
-      if (!lista) return;
+      if (!lista) {
+        if (remaining > 0) setTimeout(() => attempt(remaining - 1), 500);
+        return;
+      }
       if (lista.querySelector('.flor-proactive-block')) return;
 
       const block = document.createElement('div');
@@ -581,7 +591,8 @@ new MutationObserver(() => {
       lista.appendChild(block);
       positionProactiveBlocks();
       lista.scrollTop = lista.scrollHeight;
-    }, 600);
+    };
+    attempt(12);
   }
 
   function fireTrigger(tipo, msg) {
@@ -597,11 +608,17 @@ new MutationObserver(() => {
   let cartTimer      = null;
   let carritoAbierto = false;
 
-  new MutationObserver(() => {
-    const abierto = document.documentElement.classList.contains('kaching-body__cart-open');
+  function isCartOpen() {
+    return document.documentElement.classList.contains('kaching-body__cart-open') ||
+      document.body.classList.contains('kaching-body__cart-open');
+  }
+
+  function syncCartState() {
+    const abierto = isCartOpen();
     if (abierto && !carritoAbierto) {
       carritoAbierto = true;
       if (!wasFired('carrito_inactivo')) {
+        clearTimeout(cartTimer);
         cartTimer = setTimeout(
           () => fireTrigger('carrito_inactivo', '¿Necesitás ayuda antes de confirmar tu compra?'),
           CART_TIMEOUT_MS
@@ -610,7 +627,14 @@ new MutationObserver(() => {
     } else if (!abierto && carritoAbierto) {
       carritoAbierto = false;
       clearTimeout(cartTimer);
+      clearFired('carrito_inactivo');
       document.querySelector('.flor-preview-bubble')?.remove();
     }
+  }
+
+  new MutationObserver(() => {
+    syncCartState();
   }).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+  new MutationObserver(syncCartState).observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  syncCartState();
 })();
