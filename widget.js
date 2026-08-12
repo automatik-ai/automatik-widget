@@ -1,7 +1,7 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.5
- * Fecha:   2026-05-29
+ * Versión: 1.1.6
+ * Fecha:   2026-08-12
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
  *              Incluye: init del chat n8n, header custom, quick replies,
@@ -331,15 +331,15 @@ function injectOrderLookup() {
     card.className = 'flor-order-card';
     card.innerHTML = `
       <div class="flor-order-title">Consultar estado de tu pedido</div>
-      <div class="flor-order-desc">Para encontrar tu pedido necesitamos verificar tu identidad.</div>
+      <div class="flor-order-desc">Ingresá el email con el que compraste y tu número de pedido. El número está en el mail de confirmación de la compra: son 5 cifras, tipo #21234.</div>
       <div class="flor-order-field">
         <label class="flor-order-label">Email <span class="flor-order-req">*</span></label>
         <input class="flor-order-input" type="email" placeholder="tu@email.com" autocomplete="email" />
         <span class="flor-order-error">Este campo es obligatorio</span>
       </div>
       <div class="flor-order-field">
-        <label class="flor-order-label">Número de orden <span class="flor-order-req">*</span></label>
-        <input class="flor-order-input" type="text" placeholder="ej: 1234" autocomplete="off" />
+        <label class="flor-order-label">Número de pedido <span class="flor-order-req">*</span></label>
+        <input class="flor-order-input" type="text" placeholder="ej: 21234" autocomplete="off" />
         <span class="flor-order-error">Este campo es obligatorio</span>
       </div>
       <div class="flor-order-note">* Campos obligatorios</div>

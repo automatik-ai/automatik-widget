@@ -1,5 +1,15 @@
 # Changelog — automatik-widget
 
+## v1.1.6 — 2026-08-12
+
+### Cambios
+- `widget.js`: copy del formulario de consulta de pedido. Medido en las conversaciones del 11-12/8:
+  8 de 10 clientes lo abandonaban, y uno de los que lo completó puso un número que no era de pedido.
+  La descripción ahora dice dónde encontrar el número (mail de confirmación, 5 cifras), el label pasa
+  de "Número de orden" a "Número de pedido" (como figura en el mail de Shopify) y el placeholder
+  muestra un formato real (`ej: 21234` en vez de `ej: 1234`).
+- `loader.js`: cache-bust actualizado a `1.1.6`.
+
 ## v1.1.5 — 2026-08-12
 
 ### Cambios
