@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.1.3
+ * Versión: 1.1.4
  * Fecha:   2026-05-29
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
@@ -23,10 +23,19 @@
 }
 .n8n-chat > * { pointer-events: auto !important; }
 
+/* n8n positions this wrapper, not the chat window itself. Keeping the
+   offset here prevents the panel from touching the viewport edge. */
+.chat-window-wrapper {
+  right: 24px !important;
+  bottom: 20px !important;
+  left: auto !important;
+  max-width: calc(100vw - 48px) !important;
+}
+
 /* ── Ventana principal ──────────────────────────────────── */
 .chat-window {
   width: 410px !important;
-  max-width: calc(100vw - 24px) !important;
+  max-width: calc(100vw - 48px) !important;
   height: 610px !important;
   border: 0 !important;
   outline: 0 !important;
@@ -34,8 +43,7 @@
   overflow: hidden !important;
   background: #f6fcf8 !important;
   box-shadow: 0 18px 46px rgba(22, 92, 60, 0.16), 0 2px 10px rgba(14, 30, 22, 0.08) !important;
-  bottom: 86px !important;
-  right: 20px !important;
+  margin-bottom: 14px !important;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
@@ -167,6 +175,27 @@ body.flor-chat-open .chat-window-toggle {
 .chat-message-from-user .chat-message-markdown,
 .chat-message-from-user .chat-message-markdown * { color: #fff !important; }
 
+/* Keep n8n's loading indicator in the conversation flow, with a compact
+   bubble instead of a full-width message row. */
+.chat-message-typing {
+  width: 72px !important;
+  max-width: 72px !important;
+  min-height: 38px !important;
+  margin: 8px 0 8px 18px !important;
+  padding: 9px 10px !important;
+  background: #fff !important;
+  border: 1px solid #e2eee7 !important;
+  border-radius: 6px 17px 17px 17px !important;
+  box-shadow: 0 5px 14px rgba(22,92,60,0.06) !important;
+}
+.chat-message-typing .chat-message-typing-body { min-height: 18px; }
+.chat-message-typing .chat-message-typing-circle {
+  width: 7px !important;
+  height: 7px !important;
+  margin: 2px !important;
+  background: #6d8477 !important;
+}
+
 /* ── Tarjeta de producto ────────────────────────────────── */
 .chat-message-from-bot.flor-has-card { flex-direction: column !important; align-items: flex-start !important; }
 .flor-product-card {
@@ -191,6 +220,10 @@ body.flor-chat-open .chat-window-toggle {
 }
 .flor-add-btn:disabled { opacity: 0.7; cursor: default; }
 .flor-cart-actions { display: flex; gap: 7px; padding: 0 18px 8px; }
+.flor-proactive-block {
+  width: 100%;
+  flex: 0 0 auto;
+}
 .flor-cart-action {
   background: #fff; border: 1px solid #c6e2d2; border-radius: 16px;
   color: #263b31; cursor: pointer; font-size: 12px; padding: 7px 11px;
@@ -252,7 +285,7 @@ body.flor-chat-open .chat-window-toggle {
   width: 54px !important; height: 54px !important;
   border-radius: 50% !important;
   box-shadow: 0 8px 22px rgba(39,144,93,0.3) !important;
-  bottom: 24px !important; right: 24px !important; position: fixed !important;
+  position: static !important;
 }
 
 /* ── Badge notificación ─────────────────────────────────── */
@@ -350,7 +383,7 @@ body.flor-chat-open .chat-window-toggle {
 .flor-preview-bubble {
   position: fixed !important;
   bottom: 90px !important;
-  right: 20px !important;
+  right: 24px !important;
   background: #fff !important;
   border: 1px solid #deeee5;
   border-radius: 16px 16px 4px 16px;
@@ -366,6 +399,10 @@ body.flor-chat-open .chat-window-toggle {
   animation: florPreviewIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
 }
 .flor-preview-bubble:hover { background: #f6fcf8; }
+.flor-preview-bubble:focus-visible {
+  outline: 3px solid rgba(55,174,118,0.35);
+  outline-offset: 3px;
+}
 
 @keyframes florPreviewIn {
   from { transform: scale(0.6) translateY(8px); opacity: 0; }
@@ -374,11 +411,16 @@ body.flor-chat-open .chat-window-toggle {
 
 /* ── Responsive ─────────────────────────────────────────── */
 @media (max-width: 640px) {
+  .chat-window-wrapper {
+    right: 10px !important;
+    bottom: 14px !important;
+    max-width: calc(100vw - 20px) !important;
+  }
   .chat-window {
     width: calc(100vw - 20px) !important;
     height: min(650px, calc(100vh - 112px)) !important;
     max-height: 600px !important;
-    bottom: 82px !important; right: 10px !important;
+    margin-bottom: 12px !important;
   }
-  .chat-window-toggle { bottom: 20px !important; right: 14px !important; }
+  .flor-preview-bubble { right: 14px !important; bottom: 82px !important; max-width: min(250px, calc(100vw - 28px)); }
 }

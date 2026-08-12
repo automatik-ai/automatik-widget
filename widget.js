@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.3
+ * Versión: 1.1.4
  * Fecha:   2026-05-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -155,6 +155,27 @@ function setupChatStateObserver() {
   };
   update();
   new MutationObserver(update).observe(chatWin, { attributes: true, attributeFilter: ['class', 'style'] });
+}
+
+/* The proactive cart notice lives outside n8n's Vue message list. Move its
+   block before the first customer message so n8n's typing indicator and
+   response remain below the question that triggered them. */
+function positionProactiveBlocks() {
+  document.querySelectorAll('.flor-proactive-block').forEach(block => {
+    if (block.dataset.florPositioned === '1') return;
+    const list = block.parentElement;
+    if (!list?.classList.contains('chat-messages-list')) return;
+    const existingUsers = block.__florExistingUsers || new Set();
+    const nextUserMessage = Array.from(list.children).find(child =>
+      child !== block &&
+      child.classList?.contains('chat-message-from-user') &&
+      !existingUsers.has(child)
+    );
+    if (nextUserMessage && block.nextElementSibling !== nextUserMessage) {
+      list.insertBefore(block, nextUserMessage);
+      block.dataset.florPositioned = '1';
+    }
+  });
 }
 
 /* ── Envío de mensajes programático ─────────────────────── */
@@ -414,6 +435,32 @@ function hideBranding() {
   });
 }
 
+/* ── Status messages (pensando) auto-remove ─────────────── */
+function markAndCleanStatusMessages() {
+  const botMessages = document.querySelectorAll('.chat-message-from-bot');
+  botMessages.forEach(msg => {
+    const markdown = msg.querySelector('.chat-message-markdown');
+    if (!markdown) return;
+    const text = markdown.textContent.trim();
+    if (text.endsWith('...') && text.length < 80 && !msg.dataset.florStatusChecked) {
+      msg.dataset.florStatusChecked = '1';
+      msg.dataset.florStatus = 'pending';
+      msg.style.cssText += 'transition:opacity 0.25s,max-height 0.3s;';
+    }
+    if (!text.endsWith('...') && text.length > 0 && !msg.dataset.florStatusChecked) {
+      msg.dataset.florStatusChecked = '1';
+      document.querySelectorAll('[data-flor-status="pending"]').forEach(status => {
+        status.style.opacity = '0';
+        status.style.maxHeight = '0';
+        status.style.overflow = 'hidden';
+        status.style.marginTop = '0';
+        status.style.marginBottom = '0';
+        setTimeout(() => status.remove(), 300);
+      });
+    }
+  });
+}
+
 /* ── Observer principal ─────────────────────────────────── */
 let florCardDebounce;
 new MutationObserver(() => {
@@ -422,12 +469,14 @@ new MutationObserver(() => {
   autoStart();
   injectQuickReplies();
   injectOrderLookup();
+  markAndCleanStatusMessages();
   clearTimeout(florCardDebounce);
   florCardDebounce = setTimeout(injectProductCards, 500);
   trackUserMessages();
   injectToggleIcon();
   animateToggle();
   setupChatStateObserver();
+  positionProactiveBlocks();
 }).observe(document.body, { childList: true, subtree: true, characterData: true });
 
 /* ── Trigger carrito inactivo ───────────────────────────── */
@@ -451,10 +500,19 @@ new MutationObserver(() => {
     const bubble = document.createElement('div');
     bubble.className = 'flor-preview-bubble';
     bubble.textContent = msg;
-    bubble.style.cssText = 'position:fixed!important;bottom:90px!important;right:20px!important;z-index:2147483647!important';
-    bubble.addEventListener('click', () => {
+    bubble.setAttribute('role', 'button');
+    bubble.setAttribute('tabindex', '0');
+    bubble.setAttribute('aria-label', 'Abrir soporte');
+    const openFromBubble = () => {
       bubble.remove();
       openChat();
+    };
+    bubble.addEventListener('click', openFromBubble);
+    bubble.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openFromBubble();
+      }
     });
     document.body.appendChild(bubble);
   }
@@ -485,10 +543,20 @@ new MutationObserver(() => {
     setTimeout(() => {
       const lista = document.querySelector('.chat-messages-list');
       if (!lista) return;
+      if (lista.querySelector('.flor-proactive-block')) return;
+
+      const block = document.createElement('div');
+      block.className = 'flor-proactive-block';
+      block.__florExistingUsers = new Set(
+        Array.from(lista.children).filter(child =>
+          child.classList?.contains('chat-message-from-user')
+        )
+      );
       const wrapper = document.createElement('div');
       wrapper.className = 'chat-message chat-message-from-bot';
+      wrapper.dataset.florProactiveMessage = '1';
       wrapper.innerHTML = `<div class="chat-message-bubble"><div class="chat-message-markdown">${msg}</div></div>`;
-      lista.appendChild(wrapper);
+      block.appendChild(wrapper);
 
       if (msg === '¿Necesitás ayuda antes de confirmar tu compra?') {
         const actions = document.createElement('div');
@@ -508,8 +576,10 @@ new MutationObserver(() => {
           });
           actions.appendChild(btn);
         });
-        lista.appendChild(actions);
+        block.appendChild(actions);
       }
+      lista.appendChild(block);
+      positionProactiveBlocks();
       lista.scrollTop = lista.scrollHeight;
     }, 600);
   }
