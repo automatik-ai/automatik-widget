@@ -1,5 +1,13 @@
 # Changelog — automatik-widget
 
+## v1.1.4 — 2026-08-11
+
+### Cambios
+- `widget.css`: panel separado del borde derecho en desktop y mobile.
+- `widget.css`: indicador de carga compacto y alineado dentro del flujo de conversación.
+- `widget.js`: aviso de carrito agrupado y reposicionado antes del primer mensaje del cliente.
+- `widget.js`: burbuja de carrito con foco de teclado y cache-bust `1.1.4`.
+
 ## v1.1.0 — 2026-05-29
 
 ### Cambios
