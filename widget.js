@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.7
+ * Versión: 1.1.8
  * Fecha:   2026-08-13
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -17,7 +17,7 @@
  *     hacer commit con bump de versión y actualizar cache-buster en theme.liquid.
  */
 
-import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat/chat.bundle.es.js';
+import { createChat } from 'https://cdn.jsdelivr.net/npm/@n8n/chat@0.9.1/chat.bundle.es.js';
 
 /* ── Configuración ──────────────────────────────────────── */
 
@@ -33,6 +33,169 @@ const QUICK_OPTIONS = [
   { label: 'Seguimiento de pedido', message: 'Quiero consultar el seguimiento de mi pedido' },
   { label: 'Otra consulta',         message: null }
 ];
+
+const MOBILE_BREAKPOINT = 767;
+const MOBILE_QUERY = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+
+let florChatOpen = false;
+let florViewportFrame = null;
+let florPageLock = null;
+let florLastFocusedElement = null;
+let florNearConversationEnd = true;
+let florMobileViewportBaseline = 0;
+
+function isMobileChatViewport() {
+  return MOBILE_QUERY.matches;
+}
+
+function getChatScrollContainer() {
+  return document.querySelector('.chat-body');
+}
+
+function scrollConversationToEnd(behavior = 'auto') {
+  const container = getChatScrollContainer();
+  if (!container) return;
+  if (typeof container.scrollTo === 'function') {
+    container.scrollTo({ top: container.scrollHeight, behavior });
+  } else {
+    container.scrollTop = container.scrollHeight;
+  }
+  florNearConversationEnd = true;
+}
+
+function updateMobileViewport() {
+  florViewportFrame = null;
+  if (!florChatOpen || !isMobileChatViewport()) return;
+
+  const viewport = window.visualViewport;
+  const height = Math.round(viewport?.height || window.innerHeight);
+  const offsetTop = Math.round(viewport?.offsetTop || 0);
+  const active = document.activeElement;
+  const inputFocused = active?.matches(
+    '.chat-input textarea, .chat-footer textarea, .chat-input input[type="text"], .flor-order-input'
+  );
+
+  // Android can shrink innerHeight and visualViewport together. Keep the
+  // pre-keyboard height so keyboard detection still works in that mode.
+  if (!inputFocused) {
+    florMobileViewportBaseline = Math.max(
+      height,
+      window.innerHeight,
+      document.documentElement.clientHeight || 0
+    );
+  }
+  const layoutHeight = Math.max(
+    florMobileViewportBaseline,
+    window.innerHeight,
+    document.documentElement.clientHeight || 0
+  );
+  const keyboardOpen = Boolean(inputFocused && layoutHeight - height > 120);
+
+  document.documentElement.style.setProperty('--flor-viewport-height', `${height}px`);
+  document.documentElement.style.setProperty('--flor-viewport-top', `${offsetTop}px`);
+  document.documentElement.classList.toggle('flor-keyboard-open', keyboardOpen);
+
+  if (inputFocused) {
+    requestAnimationFrame(() => scrollConversationToEnd());
+  }
+}
+
+function scheduleMobileViewportUpdate() {
+  if (florViewportFrame !== null) return;
+  florViewportFrame = requestAnimationFrame(updateMobileViewport);
+}
+
+function lockStorePage() {
+  if (florPageLock || !isMobileChatViewport()) return;
+
+  const body = document.body;
+  const html = document.documentElement;
+  const scrollY = window.scrollY;
+  florPageLock = {
+    scrollY,
+    body: {
+      position: body.style.position,
+      top: body.style.top,
+      left: body.style.left,
+      right: body.style.right,
+      width: body.style.width,
+      overflow: body.style.overflow
+    },
+    htmlOverflow: html.style.overflow
+  };
+
+  body.style.position = 'fixed';
+  body.style.top = `-${scrollY}px`;
+  body.style.left = '0';
+  body.style.right = '0';
+  body.style.width = '100%';
+  body.style.overflow = 'hidden';
+  html.style.overflow = 'hidden';
+}
+
+function unlockStorePage() {
+  if (!florPageLock) return;
+  const body = document.body;
+  const html = document.documentElement;
+  const saved = florPageLock;
+  florPageLock = null;
+
+  Object.assign(body.style, saved.body);
+  html.style.overflow = saved.htmlOverflow;
+  requestAnimationFrame(() => window.scrollTo(0, saved.scrollY));
+}
+
+function setMobileChatEnvironment(isOpen) {
+  const wasOpen = florChatOpen;
+  const wasMobileOpen = wasOpen && document.documentElement.classList.contains('flor-mobile-chat-open');
+  florChatOpen = isOpen;
+  const mobileOpen = isOpen && isMobileChatViewport();
+  document.documentElement.classList.toggle('flor-chat-open', isOpen);
+  document.body.classList.toggle('flor-chat-open', isOpen);
+  document.documentElement.classList.toggle('flor-mobile-chat-open', mobileOpen);
+  document.body.classList.toggle('flor-mobile-chat-open', mobileOpen);
+
+  const chatWindow = document.querySelector('.chat-window');
+  if (chatWindow) {
+    chatWindow.setAttribute('role', 'dialog');
+    chatWindow.setAttribute('aria-label', 'Soporte Alto Maté');
+    if (mobileOpen) chatWindow.setAttribute('aria-modal', 'true');
+    else chatWindow.removeAttribute('aria-modal');
+  }
+
+  if (mobileOpen) {
+    if (!wasMobileOpen) {
+      florLastFocusedElement = document.activeElement;
+      florMobileViewportBaseline = Math.max(
+        window.visualViewport?.height || 0,
+        window.innerHeight,
+        document.documentElement.clientHeight || 0
+      );
+      lockStorePage();
+    }
+    scheduleMobileViewportUpdate();
+    requestAnimationFrame(() => scrollConversationToEnd());
+  } else {
+    document.documentElement.classList.remove('flor-keyboard-open');
+    document.documentElement.style.removeProperty('--flor-viewport-height');
+    document.documentElement.style.removeProperty('--flor-viewport-top');
+    if (wasMobileOpen) unlockStorePage();
+    if (!isOpen && wasOpen && florLastFocusedElement?.isConnected) {
+      const focusTarget = florLastFocusedElement;
+      requestAnimationFrame(() => {
+        if (focusTarget?.isConnected) focusTarget.focus({ preventScroll: true });
+      });
+    }
+    if (!isOpen && wasOpen) florLastFocusedElement = null;
+    if (!mobileOpen) florMobileViewportBaseline = 0;
+  }
+}
+
+window.visualViewport?.addEventListener('resize', scheduleMobileViewportUpdate);
+window.visualViewport?.addEventListener('scroll', scheduleMobileViewportUpdate);
+window.addEventListener('resize', scheduleMobileViewportUpdate);
+window.addEventListener('orientationchange', scheduleMobileViewportUpdate);
+MOBILE_QUERY.addEventListener?.('change', () => setMobileChatEnvironment(florChatOpen));
 
 /* ── Helpers horario ────────────────────────────────────── */
 const argHour = () => {
@@ -144,7 +307,7 @@ function setupChatStateObserver() {
   chatWin.dataset.florObserved = '1';
   const update = () => {
     const isOpen = getComputedStyle(chatWin).display !== 'none' && chatWin.offsetHeight > 0;
-    document.body.classList.toggle('flor-chat-open', isOpen);
+    setMobileChatEnvironment(isOpen);
     if (isOpen) {
       document.querySelector('.flor-preview-bubble')?.remove();
       if (!chatWin.dataset.florOpenTracked) {
@@ -155,6 +318,33 @@ function setupChatStateObserver() {
   };
   update();
   new MutationObserver(update).observe(chatWin, { attributes: true, attributeFilter: ['class', 'style'] });
+}
+
+function setupMobileInputBehavior() {
+  const input = document.querySelector('.chat-input textarea, .chat-footer textarea, .chat-input input[type="text"]');
+  if (!input || input.dataset.florMobileReady) return;
+  input.dataset.florMobileReady = '1';
+  input.setAttribute('enterkeyhint', 'send');
+
+  input.addEventListener('focus', () => {
+    if (!isMobileChatViewport()) return;
+    window.__florQuickRepliesDismissed = true;
+    document.querySelector('.flor-quick-wrap')?.remove();
+    scheduleMobileViewportUpdate();
+    setTimeout(() => scrollConversationToEnd(), 80);
+  });
+  input.addEventListener('blur', scheduleMobileViewportUpdate);
+}
+
+function setupConversationScroll() {
+  const container = getChatScrollContainer();
+  if (!container || container.dataset.florScrollReady) return;
+  container.dataset.florScrollReady = '1';
+  const updatePosition = () => {
+    florNearConversationEnd = container.scrollHeight - container.scrollTop - container.clientHeight < 80;
+  };
+  container.addEventListener('scroll', updatePosition, { passive: true });
+  updatePosition();
 }
 
 /* The proactive cart notice lives outside n8n's Vue message list. Move its
@@ -194,6 +384,7 @@ window.__florSendMessage = sendFlorMessage;
 
 /* ── Quick replies ──────────────────────────────────────── */
 function injectQuickReplies() {
+  if (window.__florQuickRepliesDismissed) return;
   if (document.querySelectorAll('.chat-message-from-user').length > 0) {
     document.querySelector('.flor-quick-wrap')?.remove();
     return;
@@ -209,6 +400,7 @@ function injectQuickReplies() {
     btn.className = 'flor-quick-btn';
     btn.textContent = option.label;
     btn.addEventListener('click', () => {
+      window.__florQuickRepliesDismissed = true;
       if (option.message) sendFlorMessage(option.message);
       else document.querySelector('.chat-input textarea, .chat-footer textarea')?.focus();
       outerWrap.remove();
@@ -343,7 +535,7 @@ function injectOrderLookup() {
       </div>
       <div class="flor-order-field">
         <label class="flor-order-label">Número de pedido <span class="flor-order-req">*</span></label>
-        <input class="flor-order-input" type="text" placeholder="ej: 21234" autocomplete="off" />
+        <input class="flor-order-input" type="text" inputmode="numeric" enterkeyhint="done" placeholder="ej: 21234" autocomplete="off" />
         <span class="flor-order-error">Este campo es obligatorio</span>
       </div>
       <div class="flor-order-note">* Campos obligatorios</div>
@@ -440,18 +632,20 @@ function hideBranding() {
 }
 
 /* ── Status messages (pensando) auto-remove ─────────────── */
+const TRANSIENT_STATUS_MESSAGES = new Set(['Buscando...', 'Consultando...', 'Procesando...']);
+
 function markAndCleanStatusMessages() {
   const botMessages = document.querySelectorAll('.chat-message-from-bot');
   botMessages.forEach(msg => {
     const markdown = msg.querySelector('.chat-message-markdown');
     if (!markdown) return;
     const text = markdown.textContent.trim();
-    if (text.endsWith('...') && text.length < 80 && !msg.dataset.florStatusChecked) {
+    if (TRANSIENT_STATUS_MESSAGES.has(text) && !msg.dataset.florStatusChecked) {
       msg.dataset.florStatusChecked = '1';
       msg.dataset.florStatus = 'pending';
       msg.style.cssText += 'transition:opacity 0.25s,max-height 0.3s;';
     }
-    if (!text.endsWith('...') && text.length > 0 && !msg.dataset.florStatusChecked) {
+    if (!TRANSIENT_STATUS_MESSAGES.has(text) && text.length > 0 && !msg.dataset.florStatusChecked) {
       msg.dataset.florStatusChecked = '1';
       document.querySelectorAll('[data-flor-status="pending"]').forEach(status => {
         status.style.opacity = '0';
@@ -467,7 +661,11 @@ function markAndCleanStatusMessages() {
 
 /* ── Observer principal ─────────────────────────────────── */
 let florCardDebounce;
-new MutationObserver(() => {
+let florHydrationFrame = null;
+let florConversationChanged = false;
+
+function hydrateWidget() {
+  florHydrationFrame = null;
   injectHeader();
   hideBranding();
   autoStart();
@@ -480,7 +678,25 @@ new MutationObserver(() => {
   injectToggleIcon();
   animateToggle();
   setupChatStateObserver();
+  setupMobileInputBehavior();
+  setupConversationScroll();
   positionProactiveBlocks();
+
+  if (florConversationChanged && florNearConversationEnd) {
+    requestAnimationFrame(() => scrollConversationToEnd());
+  }
+  florConversationChanged = false;
+}
+
+new MutationObserver(records => {
+  if (records.some(record => {
+    const target = record.target.nodeType === Node.ELEMENT_NODE ? record.target : record.target.parentElement;
+    return target?.closest?.('.chat-messages-list') ||
+      Array.from(record.addedNodes).some(node => node.nodeType === Node.ELEMENT_NODE &&
+        (node.matches?.('.chat-message, .chat-message-typing') || node.querySelector?.('.chat-message, .chat-message-typing')));
+  })) florConversationChanged = true;
+
+  if (florHydrationFrame === null) florHydrationFrame = requestAnimationFrame(hydrateWidget);
 }).observe(document.body, { childList: true, subtree: true, characterData: true });
 
 /* ── Trigger carrito inactivo ───────────────────────────── */

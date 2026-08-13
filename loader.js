@@ -1,7 +1,7 @@
 /**
  * automatik-widget / loader.js
- * Versión: 1.1.6
- * Fecha:   2026-08-12
+ * Versión: 1.1.8
+ * Fecha:   2026-08-13
  * Descripción: Loader del widget Flor. Consulta la Edge Function de Supabase
  *              para verificar si la tienda está activa antes de cargar el widget.
  *              Si active=false, no carga nada — control de acceso sin tocar Shopify.
@@ -18,8 +18,8 @@
   'use strict';
 
   var CONFIG_URL = 'https://yvwxjpujeekphepnskjd.supabase.co/functions/v1/widget-config';
-  var WIDGET_JS  = 'https://automatik-ai.github.io/automatik-widget/widget.js?v=1.1.6';
-  var WIDGET_CSS = 'https://automatik-ai.github.io/automatik-widget/widget.css?v=1.1.6';
+  var WIDGET_JS  = 'https://automatik-ai.github.io/automatik-widget/widget.js?v=1.1.8';
+  var WIDGET_CSS = 'https://automatik-ai.github.io/automatik-widget/widget.css?v=1.1.8';
 
   // document.currentScript no funciona con async — el script NO debe tener async
   var script  = document.currentScript;
@@ -37,12 +37,6 @@
     .then(function (res) { return res.json(); })
     .then(function (config) {
       if (!config.active) return;
-
-      // Inyectar CSS base de n8n (necesario para posicionamiento y estructura)
-      var linkN8n  = document.createElement('link');
-      linkN8n.rel  = 'stylesheet';
-      linkN8n.href = 'https://cdn.jsdelivr.net/npm/@n8n/chat/style.css';
-      document.head.appendChild(linkN8n);
 
       // Inyectar CSS custom (sobreescribe estilos n8n con los de Alto Maté)
       var link  = document.createElement('link');
