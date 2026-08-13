@@ -1,5 +1,18 @@
 # Changelog — automatik-widget
 
+## v1.1.8 — 2026-08-13
+
+### Cambios
+- Mobile: chat de pantalla completa hasta 767 px, con header y footer fijos dentro del layout.
+- Mobile: altura sincronizada con `visualViewport`, con fallback a `innerHeight`, para teclados Android/iOS y navegadores embebidos.
+- Mobile: bloqueo y restauración del scroll de Shopify mientras el chat está abierto.
+- Mobile: inputs de 16 px para evitar zoom automático en iPhone; número de pedido con teclado numérico.
+- Mobile: respuestas rápidas se ocultan al escribir para liberar espacio sobre el teclado.
+- Conversación: scroll inteligente al final sin arrastrar al cliente si está leyendo mensajes anteriores.
+- Accesibilidad: diálogo modal en mobile, foco restaurado y soporte para movimiento reducido.
+- Dependencia: `@n8n/chat` fijada en `0.9.1`; se elimina la segunda carga dinámica del CSS base.
+- Rendimiento: hidratación del widget agrupada por frame y detección de mensajes transitorios explícita.
+
 ## v1.1.6 — 2026-08-12
 
 ### Cambios

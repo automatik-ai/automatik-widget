@@ -31,7 +31,7 @@ Reemplazar TODO el bloque `{% if true %} ... {% endif %}` por esto:
 
 ```liquid
 {% if true %}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@n8n/chat/style.css" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@n8n/chat@0.9.1/style.css" />
 {% if request.page_type == 'product' %}
 <style>
   .chat-window-toggle { opacity: 0 !important; pointer-events: none !important; }
@@ -46,12 +46,13 @@ window.FlorShopifyConfig = {
   pageType:         {{ request.page_type | json }}
 };
 </script>
-<script src="https://automatik-ai.github.io/automatik-widget/loader.js?v=1.1.5" data-store="alto-mate"></script>
+<script src="https://automatik-ai.github.io/automatik-widget/loader.js?v=1.1.8" data-store="alto-mate"></script>
 {% endif %}
 ```
 
 > ⚠️ El CSS de n8n DEBE estar en el HTML antes del loader — si se carga dinámicamente el widget se posiciona mal.
-> El parámetro `?v=1.0.1` fuerza cache-bust. Actualizarlo junto al bump de versión.
+> La versión `0.9.1` está fijada porque el widget personaliza su estructura y clases internas.
+> El parámetro `?v=1.1.8` fuerza cache-bust. Actualizarlo junto al bump de versión.
 
 ## Control de acceso
 
@@ -93,6 +94,7 @@ update widget_stores set active = true where store_id = 'alto-mate';
 
 | Versión | Fecha      | Cambios                                               |
 |---------|------------|-------------------------------------------------------|
+| 1.1.8   | 2026-08-13 | Mobile fullscreen, teclado Android/iOS y scroll estable |
 | 1.1.0   | 2026-05-29 | Card [[ORDER_LOOKUP]] — formulario email + nro orden  |
 | 1.0.1   | 2026-05-29 | Fix posicionamiento CSS, fix async loader             |
 | 1.0.0   | 2026-05-29 | Migración inicial desde bloque embebido en theme.liquid |
