@@ -1,7 +1,7 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.6
- * Fecha:   2026-08-12
+ * Versión: 1.1.7
+ * Fecha:   2026-08-13
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
  *              Incluye: init del chat n8n, header custom, quick replies,
@@ -249,10 +249,14 @@ async function injectProductCards() {
       card.className = 'flor-product-card';
       message.classList.add('flor-has-card');
 
-      if (product.featured_image) {
+      // La foto de la VARIANTE elegida, no la del producto: en la Edición Limitada el diseño es
+      // la decisión de compra y los 10 diseños comparten la imagen principal. Si la variante no
+      // tiene imagen propia (los accesorios, que son de variante única), cae en la del producto.
+      const cardImage = (variant.featured_image && variant.featured_image.src) || product.featured_image;
+      if (cardImage) {
         const img = document.createElement('img');
-        img.src = product.featured_image;
-        img.alt = product.title;
+        img.src = cardImage;
+        img.alt = product.title + (variant.title !== 'Default Title' ? ' - ' + variant.title : '');
         card.appendChild(img);
       }
 
