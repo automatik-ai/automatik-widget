@@ -1,7 +1,7 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.9
- * Fecha:   2026-08-24
+ * Versión: 1.2.0
+ * Fecha:   2026-08-25
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
  *              Incluye: init del chat n8n, header custom, quick replies,
@@ -158,7 +158,7 @@ function setMobileChatEnvironment(isOpen) {
   const chatWindow = document.querySelector('.chat-window');
   if (chatWindow) {
     chatWindow.setAttribute('role', 'dialog');
-    chatWindow.setAttribute('aria-label', 'Soporte Alto Maté');
+    chatWindow.setAttribute('aria-label', 'Chat de ALTO MATE®');
     if (mobileOpen) chatWindow.setAttribute('aria-modal', 'true');
     else chatWindow.removeAttribute('aria-modal');
   }
@@ -203,7 +203,7 @@ const argHour = () => {
   return new Date(utc - 3 * 3600000).getHours();
 };
 const isOnline = argHour() >= 7;
-if (!isOnline) document.documentElement.classList.add('chat-offline');
+if (!isOnline) document.documentElement.classList.add('flor-offline');
 
 /* ── Analytics ──────────────────────────────────────────── */
 function getFlorSessionId() {
@@ -248,8 +248,8 @@ createChat({
   mode: 'window',
   initialMessages: [
     isOnline
-      ? 'Hola. ¿En qué te podemos ayudar?'
-      : 'Hola. Ahora estamos fuera de horario; respondemos desde las 7 AM.'
+      ? 'Hola, soy Flor. ¿Te ayudo a elegir, o querés ver cómo viene tu pedido?'
+      : 'Hola, soy Flor. Te respondo ahora, a cualquier hora. Si hace falta una persona del equipo, te escribe desde las 7 AM.'
   ],
   metadata: {
     customer_logged_in: shopify.customerLoggedIn ?? false,
@@ -260,8 +260,8 @@ createChat({
   },
   i18n: {
     en: {
-      title:               'Soporte',
-      subtitle:            isOnline ? 'En línea' : 'Volvemos a las 7 AM',
+      title:               'Flor',
+      subtitle:            isOnline ? 'ALTO MATE® · Atención' : 'ALTO MATE® · Respondo ahora',
       inputPlaceholder:    'Escribí tu consulta...',
       getStarted:          'Iniciar chat',
       closeButtonTooltip:  'Cerrar'
@@ -276,15 +276,15 @@ function injectHeader() {
 
   const avatar = document.createElement('div');
   avatar.className = 'flor-avatar';
-  avatar.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a8 8 0 0 0-8 8v5a3 3 0 0 0 3 3h2v-7H6v-1a6 6 0 0 1 12 0v1h-3v7h3a3 3 0 0 0 3-3v-5a8 8 0 0 0-8-8Z"/></svg>`;
+  avatar.innerHTML = `<img src="https://altomatee.com.ar/cdn/shop/files/sin_fd.png?width=128" alt="" aria-hidden="true">`;
 
   const textDiv = document.createElement('div');
   textDiv.className = 'flor-header-text';
   textDiv.innerHTML = `
-    <div class="flor-header-title">Soporte</div>
+    <div class="flor-header-title">Flor</div>
     <div class="flor-header-subtitle">
       <span class="flor-dot"></span>
-      <span>${isOnline ? 'ALTO MATÉ' : 'Volvemos a las 7 AM'}</span>
+      <span>ALTO MATE&reg; <span class="flor-sep">&#9670;</span> ${isOnline ? 'ATENCIÓN' : 'RESPONDO AHORA'}</span>
     </div>`;
 
   const closeBtn = document.createElement('button');
@@ -411,7 +411,7 @@ function injectQuickReplies() {
   const outerWrap = document.createElement('div');
   outerWrap.className = 'flor-quick-wrap';
   outerWrap.appendChild(wrap);
-  list.parentNode.insertBefore(outerWrap, list);
+  list.appendChild(outerWrap);
 }
 
 /* ── Links del bot ──────────────────────────────────────── */
@@ -474,6 +474,18 @@ async function injectProductCards() {
       card.className = 'flor-product-card';
       message.classList.add('flor-has-card');
 
+      const url = root + 'products/' + encodeURIComponent(handle) + '?variant=' + variantId;
+      const linkWrap = (child) => {
+        const a = document.createElement('a');
+        a.className = 'flor-product-link';
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.addEventListener('click', () => trackFlorEvent('producto_abierto', { product_handle: handle, variant_id: variantId }));
+        a.appendChild(child);
+        return a;
+      };
+
       // La foto de la VARIANTE elegida, no la del producto: en la Edición Limitada el diseño es
       // la decisión de compra y los 10 diseños comparten la imagen principal. Si la variante no
       // tiene imagen propia (los accesorios, que son de variante única), cae en la del producto.
@@ -482,7 +494,7 @@ async function injectProductCards() {
         const img = document.createElement('img');
         img.src = cardImage;
         img.alt = product.title + (variant.title !== 'Default Title' ? ' - ' + variant.title : '');
-        card.appendChild(img);
+        card.appendChild(linkWrap(img));
       }
 
       const content = document.createElement('div');
@@ -505,11 +517,27 @@ async function injectProductCards() {
         style: 'currency', currency: 'ARS', maximumFractionDigits: 0
       }).format(variant.price / 100);
 
+      if (variant.compare_at_price > variant.price) {
+        const old = document.createElement('span');
+        old.className = 'flor-product-price-old';
+        old.textContent = new Intl.NumberFormat('es-AR', {
+          style: 'currency', currency: 'ARS', maximumFractionDigits: 0
+        }).format(variant.compare_at_price / 100);
+        price.classList.add('flor-product-price--sale');
+        row.append(old);
+      }
+
       const add = document.createElement('button');
       add.className  = 'flor-add-btn';
       add.type       = 'button';
       add.textContent = 'Agregar';
+      let yaAgregado = false;
       add.addEventListener('click', async () => {
+        if (yaAgregado) {
+          trackFlorEvent('ir_al_carrito', { product_handle: handle });
+          window.location.href = root + 'cart';
+          return;
+        }
         add.disabled    = true;
         add.textContent = 'Agregando...';
         try {
@@ -521,7 +549,9 @@ async function injectProductCards() {
           if (!res.ok) throw new Error('cart');
           await markAssistedCart();
           trackFlorEvent('agregado_carrito_chat', { product_handle: handle, variant_id: variantId });
-          add.textContent = 'Agregado';
+          yaAgregado      = true;
+          add.disabled    = false;
+          add.innerHTML   = 'Ir al carrito &nbsp;&rarr;';
           document.dispatchEvent(new CustomEvent('cart:refresh'));
         } catch (_) {
           add.disabled    = false;
@@ -530,7 +560,7 @@ async function injectProductCards() {
       });
 
       row.append(price, add);
-      content.append(title, option, row);
+      content.append(linkWrap(title), option, row);
       card.appendChild(content);
       message.appendChild(card);
       trackFlorEvent('producto_recomendado',   { product_handle: handle, variant_id: variantId });
@@ -562,33 +592,35 @@ function injectOrderLookup() {
       <div class="flor-order-title">Consultar estado de tu pedido</div>
       <div class="flor-order-desc">Ingresá el email con el que compraste y tu número de pedido. El número está en el mail de confirmación de la compra: son 5 cifras, tipo #21234.</div>
       <div class="flor-order-field">
-        <label class="flor-order-label">Email <span class="flor-order-req">*</span></label>
+        <label class="flor-order-label">Email</label>
         <input class="flor-order-input" type="email" placeholder="tu@email.com" autocomplete="email" />
         <span class="flor-order-error">Este campo es obligatorio</span>
       </div>
       <div class="flor-order-field">
-        <label class="flor-order-label">Número de pedido <span class="flor-order-req">*</span></label>
-        <input class="flor-order-input" type="text" inputmode="numeric" enterkeyhint="done" placeholder="ej: 21234" autocomplete="off" />
+        <label class="flor-order-label">Número de pedido</label>
+        <input class="flor-order-input" type="text" inputmode="numeric" enterkeyhint="send" placeholder="ej: 21234" autocomplete="off" />
         <span class="flor-order-error">Este campo es obligatorio</span>
       </div>
-      <div class="flor-order-note">* Campos obligatorios</div>
-      <button class="flor-order-btn" type="button" disabled>Consultar pedido</button>
+      <button class="flor-order-btn" type="button">Consultar pedido &nbsp;&rarr;</button>
     `;
 
     const [emailInput, orderInput] = card.querySelectorAll('.flor-order-input');
     const [emailError, orderError] = card.querySelectorAll('.flor-order-error');
     const submitBtn = card.querySelector('.flor-order-btn');
 
-    function checkFields() {
-      submitBtn.disabled = !(emailInput.value.trim() && orderInput.value.trim());
-    }
-    emailInput.addEventListener('input', checkFields);
-    orderInput.addEventListener('input', checkFields);
 
     function clearError(input, errorEl) {
       input.classList.remove('flor-order-input--error');
       errorEl.classList.remove('flor-order-error--visible');
+      errorEl.textContent = 'Este campo es obligatorio';
     }
+
+    // Los inputs cuelgan de divs, no de un <form>: sin esto Enter no hace nada.
+    [emailInput, orderInput].forEach(input => {
+      input.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); submitBtn.click(); }
+      });
+    });
     emailInput.addEventListener('input', () => clearError(emailInput, emailError));
     orderInput.addEventListener('input', () => clearError(orderInput, orderError));
 
@@ -596,6 +628,12 @@ function injectOrderLookup() {
       let valid = true;
       if (!emailInput.value.trim()) {
         emailInput.classList.add('flor-order-input--error');
+        emailError.classList.add('flor-order-error--visible');
+        valid = false;
+      }
+      if (emailInput.value.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(emailInput.value.trim())) {
+        emailInput.classList.add('flor-order-input--error');
+        emailError.textContent = 'Revisá el email: parece que falta algo';
         emailError.classList.add('flor-order-error--visible');
         valid = false;
       }
@@ -649,7 +687,8 @@ function animateToggle() {
   const toggle = document.querySelector('.chat-window-toggle');
   if (!toggle || toggle.dataset.florAnim) return;
   toggle.dataset.florAnim = '1';
-  toggle.style.animation = 'florToggleIn 0.55s cubic-bezier(0.34,1.56,0.64,1) 0.7s both';
+  toggle.style.animation = 'florToggleIn 0.35s ease-out 0.7s both';
+  toggle.addEventListener('animationend', () => { toggle.style.animation = ''; }, { once: true });
 }
 
 function autoStart() {

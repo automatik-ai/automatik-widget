@@ -1,5 +1,54 @@
 # Changelog — automatik-widget
 
+## v1.2.0 — 2026-08-25
+
+### Cambios
+- `widget.css`: rework de marca. La paleta y la tipografía ahora son las de ALTO MATÉ® y no las de
+  la plantilla: cream `#f5f2eb` de fondo, header negro plano `#2e2e2e` (la banda de los mails) en
+  vez del degradé verde, Poppins declarada, y el sage del theme (`--color-base-accent-1`,
+  `#81a080`) como acento. Los rellenos que llevan texto blanco usan `#546f53`: el sage de marca
+  sobre blanco da 2,89:1 y no llega al mínimo legible; el tono nuevo, con el mismo matiz, da 5,56:1.
+- `widget.css`: se mapean las variables del propio `@n8n/chat` (`--chat--font-family`,
+  `--chat--color-*`). Sin esto medio rework era un no-op: el `style.css` del paquete se carga dentro
+  del `<body>` de la tienda y le ganaba a la hoja del widget por orden, así que el panel salía con
+  la tipografía del sistema y el botón de "Iniciar chat" con el rosa `#e74266` de n8n.
+- `widget.css`: sistema explícito de radios (4/6/12/100), espaciados múltiplos de 4 con gutter de
+  16px, cinco tamaños tipográficos y sólo los pesos 400 y 700 — los únicos que el theme sirve.
+  Las sombras difusas se van de burbujas y tarjetas (el sistema pide sombra sólida o borde a secas);
+  quedan las tres de lo que flota sobre la tienda.
+- `widget.css`: la firma de CTA de la marca (relleno + esquina de 6px + sombra sólida sin desenfoque)
+  queda para los dos botones que venden. El de enviar pasa a tinta: copiaba la misma firma y en el
+  panel del formulario quedaban dos botones verdes iguales compitiendo.
+- `widget.css`: la foto de la tarjeta de producto pasa a `contain` sobre 176px. Las imágenes de
+  variante son 4:5 verticales y recortadas a 290×126 mostraban el 35 % del medio, sin bombilla ni
+  tapa. El precio sube a 20px y manda en la fila.
+- `widget.css`: estados que faltaban — `:focus-visible` en botones y chips, el deshabilitado del
+  botón de enviar (salía idéntico al activo), `::placeholder` con el gris de la paleta, y
+  `prefers-reduced-motion` sobre los puntos del "escribiendo", que rebotaban igual porque la
+  animación vive en los hijos.
+- `widget.css`: los campos suben a 16px en cualquier dispositivo táctil (`pointer: coarse`). El bump
+  vivía sólo bajo 767px y un iPad vertical cae del lado de escritorio: Safari hacía auto-zoom al
+  enfocar y dejaba la tienda zoomeada.
+- `widget.css`: el namespace de las variables pasa de `--am-*` a `--flor-*`. La tienda ya define
+  `--am-ink` (#111111) y `--am-line` (#ececec) con otros valores.
+- `widget.js`: el avatar deja de ser un headset de call center y pasa a ser el isotipo de la marca
+  —el favicon de la propia tienda, no un dibujo nuevo— sobre un tile cream; y el header dice
+  "Flor · ALTO MATE® ◆ ATENCIÓN" en vez de "Soporte", con el `aria-label` acorde. La marca va sin
+  acento en el header, por decisión del dueño de la tienda.
+- `widget.js`: el mensaje inicial nocturno ya no anuncia ausencia. El bot responde a cualquier hora
+  (medido: 4 de 4 mensajes entre las 00 y las 7, mediana 4,8 s); lo que espera a las 7 AM es la
+  persona del equipo, no la respuesta.
+- `widget.js`: las respuestas rápidas se insertan debajo del saludo y no arriba, para que el orden
+  de lectura sea saludo → opciones → escribir.
+- `widget.js`: la tarjeta de producto lleva la foto y el título a la ficha, muestra el precio tachado
+  cuando hay descuento y, una vez agregado, el botón pasa a "Ir al carrito".
+- `widget.js`: el formulario de pedido ya no nace deshabilitado, Enter envía y el email se valida por
+  formato (un typo volvía como "no encontramos tu pedido"). Se van los dos asteriscos y la leyenda de
+  campos obligatorios: los dos campos lo son.
+- `widget.js`: la animación del botón flotante deja de rebotar y libera el `transform` al terminar,
+  que era lo que dejaba muerto el `:hover` del paquete.
+- `loader.js`: cache-bust actualizado a `1.2.0`.
+
 ## v1.1.9 — 2026-08-24
 
 ### Cambios
