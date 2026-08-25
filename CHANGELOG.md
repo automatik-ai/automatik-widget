@@ -1,5 +1,20 @@
 # Changelog — automatik-widget
 
+## v1.1.9 — 2026-08-24
+
+### Cambios
+- `widget.js`: los links de los mensajes del bot se abren en una pestaña nueva
+  (`target="_blank"` + `rel="noopener noreferrer"`). `@n8n/chat` renderiza con markdown-it y sus
+  opciones de fábrica, así que los `<a>` salían sin `target` y el cliente que tocaba un link
+  perdía el chat y el carrito. `mailto:`, `tel:` y las anclas quedan como estaban.
+- `widget.js`: sacar `[[PRODUCT_CARD]]` y `[[ORDER_LOOKUP]]` ya no borra el resto del mensaje.
+  Las dos inyecciones hacían `markdown.textContent = markdown.textContent.replace(...)`, y asignar
+  `textContent` reemplaza todo el contenido del nodo por texto plano: en esos mensajes los `<a>`
+  que markdown-it había generado desaparecían y el link dejaba de poder tocarse. Ahora el marcador
+  se saca recorriendo sólo los nodos de texto (`stripMarker`), y el párrafo que queda vacío se
+  elimina para no dejar un hueco en la burbuja.
+- `loader.js`: cache-bust actualizado a `1.1.9`.
+
 ## v1.1.8 — 2026-08-13
 
 ### Cambios

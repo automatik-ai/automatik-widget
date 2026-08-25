@@ -1,7 +1,7 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.1.8
- * Fecha:   2026-08-13
+ * Versión: 1.1.9
+ * Fecha:   2026-08-24
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
  *              Incluye: init del chat n8n, header custom, quick replies,
@@ -414,6 +414,39 @@ function injectQuickReplies() {
   list.parentNode.insertBefore(outerWrap, list);
 }
 
+/* ── Links del bot ──────────────────────────────────────── */
+// @n8n/chat renderiza con markdown-it y sus opciones de fábrica, así que los <a> salen sin
+// target: el link se abre en la MISMA pestaña y el cliente que está comprando pierde el chat
+// y el carrito. markdown-it tampoco deja pasar HTML crudo (html: false), así que el target no
+// se puede mandar desde el mensaje: va acá, después de cada render.
+function openLinksInNewTab() {
+  document.querySelectorAll('.chat-message-from-bot .chat-message-markdown a:not([data-flor-link])').forEach(link => {
+    link.dataset.florLink = '1';
+    const href = link.getAttribute('href') || '';
+    // mailto: y tel: abren la app del sistema; una pestaña vacía de más sólo molesta.
+    if (/^(mailto:|tel:|#)/i.test(href)) return;
+    link.target = '_blank';
+    link.rel    = 'noopener noreferrer';
+  });
+}
+
+// Saca un marcador del mensaje SIN tocar el HTML que lo rodea.
+// Asignar `textContent` reemplaza todo el contenido del nodo por texto plano: los <a> que
+// markdown-it había generado desaparecen y el link deja de poder tocarse. Se recorren sólo los
+// nodos de texto, que es donde vive el marcador.
+function stripMarker(container, pattern) {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_TEXT);
+  const hits = [];
+  while (walker.nextNode()) {
+    if (pattern.test(walker.currentNode.nodeValue)) hits.push(walker.currentNode);
+  }
+  hits.forEach(node => { node.nodeValue = node.nodeValue.replace(pattern, ''); });
+  // El párrafo que quedó vacío porque SÓLO tenía el marcador no deja un hueco en la burbuja.
+  container.querySelectorAll('p').forEach(p => {
+    if (!p.textContent.trim() && !p.querySelector('img, a, br')) p.remove();
+  });
+}
+
 /* ── Tarjetas de producto ───────────────────────────────── */
 const PRODUCT_CARD_PATTERN = /\[\[PRODUCT_CARD:([^\s:[\]]+):([0-9]+)\]\]/i;
 
@@ -427,7 +460,7 @@ async function injectProductCards() {
 
     const handle    = match[1];
     const variantId = match[2];
-    markdown.textContent = markdown.textContent.replace(PRODUCT_CARD_PATTERN, '').trim();
+    stripMarker(markdown, PRODUCT_CARD_PATTERN);
 
     try {
       const root     = window.Shopify?.routes?.root || '/';
@@ -519,8 +552,8 @@ function injectOrderLookup() {
     }
     message.dataset.florOrderChecked = '1';
 
-    markdown.textContent = markdown.textContent.replace(ORDER_LOOKUP_PATTERN, '').trim();
-    if (!markdown.textContent) markdown.style.display = 'none';
+    stripMarker(markdown, ORDER_LOOKUP_PATTERN);
+    if (!markdown.textContent.trim()) markdown.style.display = 'none';
     message.classList.add('flor-has-card');
 
     const card = document.createElement('div');
@@ -671,6 +704,7 @@ function hydrateWidget() {
   autoStart();
   injectQuickReplies();
   injectOrderLookup();
+  openLinksInNewTab();
   markAndCleanStatusMessages();
   clearTimeout(florCardDebounce);
   florCardDebounce = setTimeout(injectProductCards, 500);
