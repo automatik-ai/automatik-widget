@@ -1,17 +1,70 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.1.8
- * Fecha:   2026-08-13
+ * Versión: 1.2.0
+ * Fecha:   2026-08-25
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
  *
  * IMPORTANTE: No contiene secrets, tokens ni URLs privadas.
- * Para cambios de marca: modificar colores en variables al tope de sección.
+ * Para cambios de marca: modificar las variables de acá abajo. Todo el resto las usa.
  */
 
+/* ── Marca ──────────────────────────────────────────────────
+   Los valores salen de la tienda y del sistema de diseño de los mails, no de la plantilla del
+   widget: `--color-base-accent-1` del theme es 129,160,128 (#81a080) y la tipografía de
+   altomatee.com.ar es Poppins.
+   El namespace es `--flor-` y no `--am-`: la tienda YA define `--am-ink` (#111111) y `--am-line`
+   (#ececec) con otros valores. Hoy no chocan porque están scopeadas a `.am-tl`/`.am-rv`/`.am-faq`,
+   pero el día que alguien las suba a un `:root` del body —que le gana el empate a este archivo—
+   el header se iría a #111111. `--flor-` ya es el namespace propio (widget.js escribe
+   `--flor-viewport-height`).                                                                    */
+:root {
+  --flor-cream:      #f5f2eb;   /* fondo del panel y de la conversación */
+  --flor-cream-soft: #faf7ef;   /* campos de texto en reposo */
+  --flor-white:      #ffffff;   /* burbuja del bot, tarjetas, footer */
+  --flor-ink:        #1a1a1a;   /* texto fuerte */
+  --flor-ink-soft:   #2e2e2e;   /* banda del header, cuerpo, botón de enviar */
+  --flor-gray:       #666666;   /* secundario y placeholders — 5,13:1 sobre cream */
+  --flor-gray-soft:  #888888;   /* SÓLO decorativo (punto offline). No para texto. */
+  --flor-line:       #e8e3d6;   /* bordes y divisorias */
+  --flor-sage:       #81a080;   /* acento de marca: decorativo (punto, foco, avatar) */
+  --flor-sage-ink:   #546f53;   /* relleno de lo que lleva texto blanco — 5,56:1, AA */
+  --flor-sage-deep:  #3e523d;   /* sombra sólida del CTA (firma de marca) */
+  --flor-sage-pale:  #f0f5f0;   /* hover de chips */
+  --flor-alert:      #e25a3d;   /* borde y ring de error, badge — no-texto */
+  --flor-alert-ink:  #c1442a;   /* texto de error — 5,09:1 sobre blanco */
+  --flor-disabled:   #cfc9bb;   /* controles deshabilitados */
+  --flor-font: Poppins, -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+}
+
+/* 🚨 Las variables del propio @n8n/chat, mapeadas a la marca.
+   Sin esto el rework es un no-op en la mitad de la pieza: el `style.css` del paquete se carga
+   DENTRO del body de la tienda (línea 5050; el `</head>` está en la 895) y este archivo va al
+   head, así que en los empates de especificidad gana el paquete. `.chat-layout` declara
+   `font-family: var(--chat--font-family, -apple-system…)` con (0,1,0) — el mismo peso que
+   `.n8n-chat *`— y hoy le gana por orden: el panel entero sale en la tipografía del sistema.
+   Las custom properties se resuelven por HERENCIA, no por orden de hoja, así que definirlas acá
+   gana siempre. Y el color primario del paquete es #e74266, el rosa de n8n, que asoma en el
+   botón de "Iniciar chat" mientras el webhook responde.
+   Van en `.n8n-chat` y no en `:root` a propósito: `.flor-preview-bubble` cuelga de <body>. */
+.n8n-chat {
+  --chat--font-family:              var(--flor-font);
+  --chat--color-primary:            var(--flor-sage-ink);
+  --chat--color-primary-shade-50:   var(--flor-sage-deep);
+  --chat--color-primary-shade-100:  var(--flor-sage-deep);
+  --chat--color-secondary:          var(--flor-sage-ink);
+  --chat--color-secondary-shade-50: var(--flor-sage-deep);
+  --chat--color-light:              var(--flor-cream);
+  --chat--color-light-shade-100:    var(--flor-line);
+  --chat--color-medium:             var(--flor-line);
+  --chat--color-dark:               var(--flor-ink);
+  --chat--color-disabled:           var(--flor-disabled);
+  --chat--color-typing:             var(--flor-sage);
+}
+
 /* ── Reset básico ───────────────────────────────────────── */
-.n8n-chat { font-size: 16px !important; }
-.n8n-chat * { box-sizing: border-box; }
+.n8n-chat { font-size: 16px !important; font-family: var(--flor-font) !important; }
+.n8n-chat * { box-sizing: border-box; font-family: inherit; }
 
 /* ── Contenedor raíz — posición fija sobre la página ───── */
 .n8n-chat {
@@ -39,60 +92,77 @@
   height: 610px !important;
   border: 0 !important;
   outline: 0 !important;
-  border-radius: 18px !important;
+  border-radius: 12px !important;
   overflow: hidden !important;
-  background: #f6fcf8 !important;
-  box-shadow: 0 18px 46px rgba(22, 92, 60, 0.16), 0 2px 10px rgba(14, 30, 22, 0.08) !important;
+  background: var(--flor-cream) !important;
+  box-shadow: 0 16px 40px rgba(26, 26, 26, 0.14) !important;
   margin-bottom: 14px !important;
 }
 
 /* ── Header ─────────────────────────────────────────────── */
+/* Negro plano, el mismo de la banda superior de los mails. El degradé verde saturado no existe
+   en ninguna otra pieza de la marca. Queda tile + texto + X, sin cajas de más. */
 .chat-header {
-  background: linear-gradient(135deg, rgba(68, 190, 134, 0.96), rgba(39, 144, 93, 0.98)) !important;
-  padding: 18px 18px !important;
+  background: var(--flor-ink-soft) !important;
+  padding: 16px !important;
   display: flex !important;
   flex-direction: row !important;
   align-items: center !important;
   gap: 12px !important;
-  min-height: 82px !important;
+  min-height: 78px !important;
   border: 0 !important;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2) !important;
+  box-shadow: none !important;
 }
 .chat-header > *:not(.flor-avatar):not(.flor-header-text):not(.flor-close-btn) { display: none !important; }
 
+/* El isotipo REAL de la marca —el favicon de la tienda— sobre un tile cream: el mate viene en
+   tinta oscura, así que necesita fondo claro y no el sage. */
 .flor-avatar {
-  width: 48px; height: 48px; border-radius: 13px;
-  background: rgba(255,255,255,0.16); border: 1px solid rgba(255,255,255,0.3); display: flex;
+  width: 44px; height: 44px; border-radius: 12px;
+  background: var(--flor-cream); border: 0; display: flex;
   align-items: center; justify-content: center; flex-shrink: 0;
-  color: #ffffff; font-size: 21px; font-weight: 500;
+  padding: 3px; overflow: hidden;
 }
-.flor-avatar svg { width: 25px; height: 25px; fill: #fff; }
+.flor-avatar img { width: 100%; height: 100%; object-fit: contain; display: block; }
 
-.flor-header-text { display: flex; flex-direction: column; gap: 5px; }
+.flor-header-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
 .flor-header-title {
-  font-size: 16px !important; font-weight: 600 !important;
-  color: #fff !important; line-height: 1.2; margin: 0;
+  font-size: 16px !important; font-weight: 700 !important;
+  color: var(--flor-white) !important; line-height: 1.15; margin: 0;
+  letter-spacing: -0.2px;
 }
+/* Pill del sistema: 11px, 700, letter-spacing 2px, uppercase. */
 .flor-header-subtitle {
-  font-size: 13px !important; color: rgba(255,255,255,0.74) !important;
-  display: flex; align-items: center; gap: 5px;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  letter-spacing: 2px !important;
+  text-transform: uppercase !important;
+  color: rgba(255, 255, 255, 0.62) !important;
+  display: flex; align-items: center; gap: 6px;
 }
+/* El rombo del sistema, en el gris del propio subtítulo: a 15px ya está el punto sage y dos
+   acentos verdes en seis palabras se leen como ruido. */
+.flor-sep { color: rgba(255, 255, 255, 0.35); font-size: 7px; letter-spacing: 0; margin: 0 2px; vertical-align: 1.5px; }
 .flor-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: #d7ffe9; flex-shrink: 0;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--flor-sage); flex-shrink: 0;
 }
-.chat-offline .flor-dot { background: #8a918c; }
+/* Fuera de horario el bot contesta igual (medido: 4 de 4 mensajes nocturnos respondidos, p50
+   4,8 s). El punto no se apaga: cambia de tono. */
+html.flor-offline .flor-dot { background: var(--flor-gray-soft); }
 
 .flor-close-btn {
   margin-left: auto;
-  background: rgba(255,255,255,0.16) !important;
-  border: 1px solid rgba(255,255,255,0.28) !important;
-  border-radius: 11px !important;
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 6px !important;
   cursor: pointer;
-  width: 48px; height: 40px; padding: 0;
+  width: 40px; height: 40px; padding: 0;
   display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  transition: background 0.15s;
 }
-.flor-close-btn svg { width: 18px; height: 18px; fill: rgba(255,255,255,0.8); transition: fill 0.15s; }
+.flor-close-btn:hover { background: rgba(255, 255, 255, 0.1) !important; }
+.flor-close-btn svg { width: 17px; height: 17px; fill: rgba(255,255,255,0.75); transition: fill 0.15s; }
 .flor-close-btn:hover svg { fill: #fff; }
 
 body.flor-chat-open .chat-window-toggle {
@@ -106,25 +176,29 @@ html.flor-mobile-chat-open body {
 }
 
 /* ── Body / mensajes ────────────────────────────────────── */
-.chat-body { background: #f6fcf8 !important; }
+.chat-body { background: var(--flor-cream) !important; }
 .chat-messages-list {
-  background: #f6fcf8 !important;
+  background: var(--flor-cream) !important;
   display: flex !important;
   flex-direction: column !important;
   justify-content: flex-start !important;
   align-items: stretch !important;
   flex: 1 1 auto !important;
   margin-top: 0 !important;
-  padding: 18px 0 10px !important;
+  padding: 16px 0 8px !important;
 }
 
+/* El `max-width: none` es necesario: el paquete trae `.chat-message{max-width:80%}` y carga
+   después, así que la burbuja del bot quedaba 28 % más angosta que la del cliente — justo la
+   que lleva los textos largos. */
 .chat-message {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  padding: 0 18px !important;
+  padding: 0 16px !important;
   width: 100% !important;
+  max-width: none !important;
   margin: 4px 0 !important;
   display: flex !important;
 }
@@ -133,7 +207,6 @@ html.flor-mobile-chat-open body {
   justify-content: flex-end !important;
   align-self: stretch !important;
   width: 100% !important;
-  max-width: none !important;
 }
 
 .chat-message-bubble {
@@ -158,22 +231,29 @@ html.flor-mobile-chat-open body {
   word-break: break-word !important;
   overflow-wrap: break-word !important;
   font-size: 14.5px !important;
-  line-height: 1.48 !important;
-  padding: 12px 15px !important;
+  line-height: 1.55 !important;
+  padding: 12px 16px !important;
 }
+/* Borde y nada de sombra: las FAQ de los mails son borde #e8e3d6 a secas. La regla del sistema
+   es explícita — sombra sólida sin desenfoque, las difusas se ven sucias. */
 .chat-message-from-bot .chat-message-markdown {
-  background: #fff !important;
-  color: #232825 !important;
-  border-radius: 6px 17px 17px 17px !important;
-  border: 1px solid #e2eee7 !important;
-  box-shadow: 0 5px 14px rgba(22,92,60,0.06) !important;
+  background: var(--flor-white) !important;
+  color: var(--flor-ink-soft) !important;
+  border-radius: 4px 12px 12px 12px !important;
+  border: 1px solid var(--flor-line) !important;
+  box-shadow: none !important;
 }
-.chat-message-from-bot .chat-message-markdown a { color: #27ae60 !important; text-decoration: underline !important; }
+.chat-message-from-bot .chat-message-markdown a {
+  color: var(--flor-sage-ink) !important;
+  text-decoration: underline !important;
+  text-underline-offset: 2px !important;
+  font-weight: 700 !important;
+}
 .chat-message-from-user .chat-message-markdown {
-  background: linear-gradient(135deg, #43bd86, #28955f) !important;
+  background: var(--flor-sage-ink) !important;
   color: #fff !important;
-  border-radius: 17px 6px 17px 17px !important;
-  box-shadow: 0 5px 13px rgba(39,144,93,0.16) !important;
+  border-radius: 12px 4px 12px 12px !important;
+  box-shadow: none !important;
   margin-left: auto !important;
   margin-right: 0 !important;
 }
@@ -183,102 +263,166 @@ html.flor-mobile-chat-open body {
 /* Keep n8n's loading indicator in the conversation flow, with a compact
    bubble instead of a full-width message row. */
 .chat-message-typing {
-  width: 72px !important;
-  max-width: 72px !important;
+  width: 68px !important;
+  max-width: 68px !important;
   min-height: 38px !important;
-  margin: 8px 0 8px 18px !important;
+  margin: 8px 0 8px 16px !important;
   padding: 9px 10px !important;
-  background: #fff !important;
-  border: 1px solid #e2eee7 !important;
-  border-radius: 6px 17px 17px 17px !important;
-  box-shadow: 0 5px 14px rgba(22,92,60,0.06) !important;
+  background: var(--flor-white) !important;
+  border: 1px solid var(--flor-line) !important;
+  border-radius: 4px 12px 12px 12px !important;
+  box-shadow: none !important;
 }
 .chat-message-typing .chat-message-typing-body { min-height: 18px; }
 .chat-message-typing .chat-message-typing-circle {
   width: 7px !important;
   height: 7px !important;
   margin: 2px !important;
-  background: #6d8477 !important;
+  background: var(--flor-sage) !important;
 }
 
 /* ── Tarjeta de producto ────────────────────────────────── */
 .chat-message-from-bot.flor-has-card { flex-direction: column !important; align-items: flex-start !important; }
+/* Margen lateral 0: la tarjeta cuelga de `.chat-message`, que ya trae el gutter de 16px. Con
+   margen propio arrancaba 36px adentro mientras la burbuja arrancaba en 16 y se veía el escalón. */
 .flor-product-card {
-  width: min(290px, 84%);
-  margin: 7px 18px 8px;
-  background: #fff;
-  border: 1px solid #dbece2;
-  border-radius: 16px;
+  width: min(290px, 100%);
+  margin: 8px 0;
+  background: var(--flor-white);
+  border: 1px solid var(--flor-line);
+  border-radius: 4px;
   overflow: hidden;
-  box-shadow: 0 7px 18px rgba(22,92,60,0.08);
+  box-shadow: none;
 }
-.flor-product-card img { display: block; width: 100%; height: 126px; object-fit: cover; background: #eef8f2; }
-.flor-product-content { padding: 11px 12px 12px; }
-.flor-product-title { margin: 0 0 4px; color: #21352b; font-size: 14px; font-weight: 600; line-height: 1.35; }
-.flor-product-option { margin: 0 0 10px; color: #738579; font-size: 12px; }
-.flor-product-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.flor-product-price { color: #20352b; font-size: 14px; font-weight: 600; }
+/* `contain` y no `cover`: las fotos de variante son 1638×2048 (4:5 vertical) y recortadas a
+   290×126 mostraban el 35 % del medio — sin bombilla, sin tapa y sin las badges. Fondo blanco
+   porque los PNG de Shopify vienen con fondo blanco sólido. */
+.flor-product-card img {
+  display: block; width: 100%; height: 176px;
+  object-fit: contain; background: var(--flor-white);
+}
+.flor-product-link { display: block; text-decoration: none; color: inherit; }
+.flor-product-link:hover .flor-product-title { color: var(--flor-sage-ink); }
+.flor-product-content { padding: 12px; }
+.flor-product-title { margin: 0 0 4px; color: var(--flor-ink); font-size: 16px; font-weight: 700; line-height: 1.3; }
+.flor-product-option {
+  margin: 0 0 12px; color: var(--flor-gray);
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+}
+.flor-product-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+/* El precio es el número que decide la compra: manda él, no el botón. El `margin-right: auto`
+   es lo que deja entrar el precio tachado a la izquierda cuando hay descuento. */
+.flor-product-price {
+  color: var(--flor-ink); font-size: 20px; font-weight: 700;
+  letter-spacing: -0.6px; line-height: 1.1; margin-right: auto;
+}
+.flor-product-price-old   { order: -1; font-size: 12.5px; font-weight: 400; color: var(--flor-gray); text-decoration: line-through; }
+.flor-product-price--sale { color: var(--flor-alert); }
+/* La firma de la marca: relleno sólido, esquina de 6px y sombra SÓLIDA sin desenfoque — la misma
+   tecla con canto de los CTA de los mails. Queda sólo para los dos botones que venden. */
 .flor-add-btn {
-  background: linear-gradient(135deg, #43bd86, #28955f);
-  border: 0; border-radius: 10px; color: #fff; cursor: pointer;
-  font-size: 12px; font-weight: 600; padding: 9px 11px;
+  background: var(--flor-sage-ink);
+  border: 0; border-radius: 6px; color: #fff; cursor: pointer;
+  font-size: 11px; font-weight: 700; letter-spacing: 2px; text-transform: uppercase;
+  padding: 10px 13px;
+  box-shadow: 0 3px 0 var(--flor-sage-deep);
+  transition: transform 0.1s, box-shadow 0.1s;
 }
-.flor-add-btn:disabled { opacity: 0.7; cursor: default; }
-.flor-cart-actions { display: flex; gap: 7px; padding: 0 18px 8px; }
+.flor-add-btn:hover:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 var(--flor-sage-deep); }
+/* El deshabilitado NO baja opacidad: blanco sobre sage-ink al 60 % da 2,48:1 y el estado que hay
+   que salvar es justo "Agregando…". Se hunde la tecla y el color queda intacto. */
+.flor-add-btn:disabled,
+.flor-order-btn:disabled {
+  cursor: default; transform: translateY(1px);
+  box-shadow: 0 2px 0 var(--flor-sage-deep);
+}
+.flor-cart-actions { display: flex; gap: 8px; padding: 0 16px 8px; }
 .flor-proactive-block {
   width: 100%;
   flex: 0 0 auto;
 }
-.flor-cart-action {
-  background: #fff; border: 1px solid #c6e2d2; border-radius: 16px;
-  color: #263b31; cursor: pointer; font-size: 12px; padding: 7px 11px;
-}
 
 /* ── Footer / input ─────────────────────────────────────── */
 .chat-footer {
-  background: rgba(255,255,255,0.86) !important;
-  border-top: 1px solid #deeee5 !important;
-  padding: 13px 14px 15px !important;
-  gap: 10px !important;
+  background: var(--flor-white) !important;
+  border-top: 1px solid var(--flor-line) !important;
+  padding: 12px 16px 16px !important;
 }
-.chat-input { background: transparent !important; border-top: 0 !important; padding: 0 !important; }
+/* El gap va acá: en el paquete `.chat-footer` es un div block y su `gap` es letra muerta. El
+   contenedor flex real es `.chat-input`, que no trae ninguno — en producción el textarea y la
+   tecla de enviar se tocan. */
+.chat-input {
+  background: transparent !important; border-top: 0 !important; padding: 0 !important;
+  display: flex !important; gap: 12px !important; align-items: flex-end !important;
+}
 .chat-input textarea,
 .chat-input input[type="text"],
 .chat-footer textarea {
-  border-radius: 14px !important; border: 1px solid #cfe4d8 !important;
-  padding: 13px 15px !important; font-size: 14px !important;
-  outline: none !important; resize: none !important; background: #eef8f2 !important;
+  border-radius: 6px !important; border: 1px solid var(--flor-line) !important;
+  padding: 12px 16px !important; font-size: 14px !important;
+  outline: none !important; resize: none !important; background: var(--flor-cream-soft) !important;
+  color: var(--flor-ink-soft) !important;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s !important;
 }
 .chat-input textarea:focus, .chat-input input:focus {
-  border-color: #37ae76 !important;
-  box-shadow: 0 0 0 2px rgba(55,174,118,0.13) !important;
+  border-color: var(--flor-sage) !important;
+  background: var(--flor-white) !important;
+  box-shadow: 0 0 0 3px rgba(129, 160, 128, 0.18) !important;
 }
+.chat-input textarea::placeholder,
+.chat-footer textarea::placeholder,
+.chat-input input[type="text"]::placeholder,
+.flor-order-input::placeholder { color: var(--flor-gray) !important; opacity: 1; }
+/* Enviar es utilitario, no comercial: va en tinta y sin la tecla con canto. Si copiara la firma
+   de los CTA, en el panel del formulario habría dos botones verdes iguales compitiendo. */
 .chat-input-send-button,
 .chat-input button,
 .chat-footer button[type="submit"] {
-  background: linear-gradient(135deg, #43bd86, #28955f) !important;
-  color: #fff !important; border-radius: 13px !important; border: 0 !important;
-  width: 46px !important; height: 42px !important; min-width: 46px !important;
-  box-shadow: 0 7px 16px rgba(39,144,93,0.2) !important;
+  background: var(--flor-ink-soft) !important;
+  color: #fff !important; border-radius: 6px !important; border: 0 !important;
+  width: 46px !important; height: 44px !important; min-width: 46px !important;
+  box-shadow: none !important;
   display: flex !important; align-items: center !important; justify-content: center !important; padding: 0 !important;
+  transition: background 0.15s !important;
 }
+.chat-input-send-button:hover,
+.chat-input button:hover,
+.chat-footer button[type="submit"]:hover { background: var(--flor-ink) !important; }
 .chat-input-send-button svg, .chat-input-send-button svg *,
 .chat-input button svg, .chat-input button svg *,
 .chat-footer button[type="submit"] svg, .chat-footer button[type="submit"] svg * {
   color: #fff !important; fill: #fff !important; stroke: #fff !important;
 }
-
-/* ── Quick replies ──────────────────────────────────────── */
-.flor-quick-wrap { background: rgba(227, 246, 235, 0.86); border-bottom: 1px solid #d9ebe0; flex-shrink: 0; }
-.flor-quick-replies { display: flex; gap: 10px; padding: 13px 14px; }
-.flor-quick-btn {
-  flex: 1 1 0; background: #fff !important; border: 1px solid #c6e2d2 !important;
-  color: #263b31 !important; border-radius: 14px !important;
-  padding: 11px 8px !important; font-size: 13px !important; font-weight: 500 !important;
-  cursor: pointer !important; transition: all 0.15s !important;
+/* El paquete deshabilita este botón con el textarea vacío y sólo cambia `color`, que no toca al
+   SVG: sin esto el estado inerte sale idéntico al activo y se lee como "el chat no anda".
+   El scope `.n8n-chat` hace falta para ganarle a la regla del fill de arriba. */
+.n8n-chat .chat-input-send-button[disabled] {
+  background: var(--flor-disabled) !important;
+  cursor: default !important;
 }
-.flor-quick-btn:hover, .flor-quick-btn:active {
-  background: #e8f6ee !important; border-color: #36ad75 !important; color: #20352b !important;
+.n8n-chat .chat-input-send-button[disabled] svg,
+.n8n-chat .chat-input-send-button[disabled] svg * {
+  fill: rgba(255, 255, 255, 0.72) !important;
+  stroke: rgba(255, 255, 255, 0.72) !important;
+}
+
+/* ── Chips: respuestas rápidas y acciones de carrito ────── */
+/* Un solo componente. La franja verde pegada al header se leía como una segunda barra de
+   navegación; ahora son chips sobre el cream, y el JS los inserta DEBAJO del saludo para que
+   el orden de lectura sea saludo → opciones → escribir. */
+.flor-quick-wrap { background: transparent; border-bottom: 0; flex-shrink: 0; }
+.flor-quick-replies { display: flex; gap: 8px; padding: 16px 16px 4px; }
+.flor-quick-btn,
+.flor-cart-action {
+  background: var(--flor-white); border: 1px solid var(--flor-line);
+  color: var(--flor-ink-soft); border-radius: 100px;
+  font-size: 12.5px; font-weight: 400; box-shadow: none; cursor: pointer;
+  padding: 10px 12px;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+}
+.flor-quick-btn { flex: 1 1 0; }
+.flor-quick-btn:hover, .flor-quick-btn:active, .flor-cart-action:hover {
+  background: var(--flor-sage-pale); border-color: var(--flor-sage); color: var(--flor-ink);
 }
 
 /* ── Toggle (botón flotante) ────────────────────────────── */
@@ -286,132 +430,173 @@ html.flor-mobile-chat-open body {
 
 .chat-window-toggle:not([data-flor-anim]) { opacity: 0 !important; pointer-events: none !important; }
 .chat-window-toggle {
-  background: linear-gradient(135deg, #43bd86, #28955f) !important;
+  background: var(--flor-sage-ink) !important;
   width: 54px !important; height: 54px !important;
   border-radius: 50% !important;
-  box-shadow: 0 8px 22px rgba(39,144,93,0.3) !important;
+  box-shadow: 0 6px 16px rgba(26, 26, 26, 0.18) !important;
   position: static !important;
 }
+/* El `both` de la animación de entrada dejaba clavado el transform del último keyframe, y las
+   declaraciones de origen animación le ganan a cualquier regla de autor: el hover del paquete
+   no volvía a dispararse nunca. La única puerta de entrada al chat no daba feedback. */
+.n8n-chat .chat-window-toggle:hover { background: var(--flor-sage-deep) !important; }
 
 /* ── Badge notificación ─────────────────────────────────── */
 .flor-badge {
   position: absolute; top: -4px; right: -4px;
-  width: 20px; height: 20px; background: #27945f; border-radius: 50%;
+  width: 20px; height: 20px; background: var(--flor-alert); border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
   font-size: 11px; font-weight: 700; color: #fff; z-index: 9999;
   animation: florBadgeIn 0.3s ease;
 }
 @keyframes florBadgeIn { from { transform: scale(0); } to { transform: scale(1); } }
 
+/* Sin rebote: los keyframes sobrepasaban (scale 1.18, rotate -20°) y encima el JS les ponía un
+   cubic-bezier que también sobrepasa. Es el registro juvenil que la marca no usa. */
 @keyframes florToggleIn {
-  0%   { transform: scale(0) rotate(-20deg); opacity: 0; }
-  60%  { transform: scale(1.18) rotate(5deg); opacity: 1; }
-  82%  { transform: scale(0.93) rotate(-2deg); }
-  100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  from { transform: scale(0.92); opacity: 0; }
+  to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ── Pantalla "Iniciar chat" ────────────────────────────── */
+/* Se ve desde que monta el widget hasta que `loadPreviousSession()` vuelve del webhook — o sea
+   que si el webhook está caído queda para siempre, justo cuando algo va mal. Sin esto sale con
+   el `--chat--color-primary` del paquete: #e74266, el rosa de n8n. */
+.n8n-chat .chat-get-started-footer { background: var(--flor-white) !important; }
+.n8n-chat .chat-get-started-footer .chat-button {
+  background: var(--flor-sage-ink) !important; color: #fff !important;
+  border: 0 !important; border-radius: 6px !important;
+  box-shadow: 0 3px 0 var(--flor-sage-deep) !important;
+  font-size: 11px !important; font-weight: 700 !important;
+  letter-spacing: 2px !important; text-transform: uppercase !important;
+  padding: 13px 28px !important; width: 100% !important;
 }
 
 /* ── Tarjeta consulta de pedido ─────────────────────────── */
 .flor-order-card {
   width: 100%;
-  margin: 7px 0 8px;
-  background: #fff;
-  border: 1px solid #dbece2;
-  border-radius: 16px;
-  padding: 14px 14px 16px;
-  box-shadow: 0 7px 18px rgba(22,92,60,0.08);
+  margin: 8px 0;
+  background: var(--flor-white);
+  border: 1px solid var(--flor-line);
+  border-radius: 4px;
+  padding: 16px;
+  box-shadow: none;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 .flor-order-title {
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 700;
-  color: #21352b;
+  color: var(--flor-ink);
   line-height: 1.3;
+  letter-spacing: -0.2px;
 }
 .flor-order-desc {
   font-size: 12.5px;
-  color: #5a7065;
-  line-height: 1.45;
+  color: var(--flor-gray);
+  line-height: 1.5;
   margin-top: -2px;
 }
-.flor-order-field { display: flex; flex-direction: column; gap: 4px; }
-.flor-order-label { font-size: 12px; font-weight: 600; color: #21352b; }
-.flor-order-req   { color: #d94a4a; }
+.flor-order-field { display: flex; flex-direction: column; gap: 5px; }
+.flor-order-label {
+  font-size: 11px; font-weight: 700; color: var(--flor-ink);
+  letter-spacing: 2px; text-transform: uppercase;
+}
 
 .flor-order-input {
-  border: 1px solid #cfe4d8 !important;
-  border-radius: 10px !important;
-  padding: 9px 11px !important;
+  border: 1px solid var(--flor-line) !important;
+  border-radius: 6px !important;
+  padding: 12px !important;
   font-size: 13px !important;
   outline: none !important;
-  background: #eef8f2 !important;
+  background: var(--flor-cream-soft) !important;
+  color: var(--flor-ink-soft) !important;
   width: 100%;
-  transition: border-color 0.15s, box-shadow 0.15s;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 .flor-order-input:focus {
-  border-color: #37ae76 !important;
-  box-shadow: 0 0 0 2px rgba(55,174,118,0.13) !important;
+  border-color: var(--flor-sage) !important;
+  background: var(--flor-white) !important;
+  box-shadow: 0 0 0 3px rgba(129, 160, 128, 0.18) !important;
 }
+/* El rojo de marca se queda en el borde, que como elemento no-textual necesita 3:1 y da 3,64:1;
+   el TEXTO del error va al tono oscuro, porque #e25a3d sobre blanco falla AA. */
 .flor-order-input--error {
-  border-color: #d94a4a !important;
-  box-shadow: 0 0 0 2px rgba(217,74,74,0.13) !important;
+  border-color: var(--flor-alert) !important;
+  box-shadow: 0 0 0 3px rgba(226, 90, 61, 0.14) !important;
 }
 .flor-order-input:disabled { opacity: 0.6; cursor: default; }
 
 .flor-order-error {
   display: none;
-  font-size: 11px;
-  color: #d94a4a;
-  font-weight: 500;
+  font-size: 12.5px;
+  color: var(--flor-alert-ink);
+  font-weight: 400;
 }
 .flor-order-error--visible { display: block; }
 
-.flor-order-note  { font-size: 11px; color: #8a9e93; margin-top: -2px; }
-
 .flor-order-btn {
-  background: linear-gradient(135deg, #43bd86, #28955f);
+  background: var(--flor-sage-ink);
   border: 0;
-  border-radius: 10px;
+  border-radius: 6px;
   color: #fff;
   cursor: pointer;
-  font-size: 13px;
-  font-weight: 600;
-  padding: 10px 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 13px 0;
   width: 100%;
-  transition: opacity 0.15s;
-  margin-top: 2px;
+  box-shadow: 0 3px 0 var(--flor-sage-deep);
+  transition: transform 0.1s, box-shadow 0.1s;
+  margin-top: 4px;
 }
-.flor-order-btn:disabled { opacity: 0.45; cursor: default; }
+.flor-order-btn:hover:not(:disabled) { transform: translateY(1px); box-shadow: 0 2px 0 var(--flor-sage-deep); }
 
 /* ── Burbuja preview carrito ────────────────────────────── */
+/* Cuelga de <body>, así que el reset de `.n8n-chat *` no la alcanza y sin el box-sizing medía
+   252px reales en vez de 220. */
 .flor-preview-bubble {
+  box-sizing: border-box;
   position: fixed !important;
   bottom: 90px !important;
   right: 40px !important;
-  background: #fff !important;
-  border: 1px solid #deeee5;
-  border-radius: 16px 16px 4px 16px;
-  padding: 11px 15px;
+  background: var(--flor-white) !important;
+  border: 1px solid var(--flor-line);
+  border-radius: 12px 12px 4px 12px;
+  padding: 12px 15px;
   max-width: 220px;
-  box-shadow: 0 6px 22px rgba(22,92,60,0.14);
+  box-shadow: 0 8px 24px rgba(26, 26, 26, 0.14);
   font-size: 13px;
-  line-height: 1.45;
-  color: #232825 !important;
+  line-height: 1.5;
+  font-family: var(--flor-font);
+  color: var(--flor-ink-soft) !important;
   z-index: 2147483647 !important;
   cursor: pointer;
   transform-origin: bottom right;
   animation: florPreviewIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
 }
-.flor-preview-bubble:hover { background: #f6fcf8; }
+.flor-preview-bubble:hover { background: var(--flor-cream-soft); }
 .flor-preview-bubble:focus-visible {
-  outline: 3px solid rgba(55,174,118,0.35);
+  outline: 3px solid rgba(129, 160, 128, 0.45);
   outline-offset: 3px;
 }
 
 @keyframes florPreviewIn {
   from { transform: scale(0.6) translateY(8px); opacity: 0; }
   to   { transform: scale(1) translateY(0);     opacity: 1; }
+}
+
+/* ── Foco visible por teclado ───────────────────────────── */
+.flor-quick-btn:focus-visible, .flor-add-btn:focus-visible,
+.flor-order-btn:focus-visible, .flor-cart-action:focus-visible,
+.chat-input-send-button:focus-visible {
+  outline: 3px solid rgba(129, 160, 128, 0.45); outline-offset: 2px;
+}
+/* Vive sobre el header negro: el ring sage no se vería. */
+.flor-close-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.8); outline-offset: 2px;
 }
 
 /* ── Responsive ─────────────────────────────────────────── */
@@ -458,7 +643,7 @@ html.flor-mobile-chat-open body {
     height: 100dvh !important;
     max-width: none !important;
     z-index: 2147483647 !important;
-    background: #f6fcf8 !important;
+    background: var(--flor-cream) !important;
     pointer-events: auto !important;
   }
 
@@ -518,9 +703,9 @@ html.flor-mobile-chat-open body {
     border-radius: 12px !important;
   }
 
-  html.flor-mobile-chat-open .flor-avatar svg {
-    width: 23px !important;
-    height: 23px !important;
+  html.flor-mobile-chat-open .flor-avatar img {
+    width: 100% !important;
+    height: 100% !important;
   }
 
   html.flor-mobile-chat-open .flor-close-btn {
@@ -548,7 +733,7 @@ html.flor-mobile-chat-open body {
     position: relative !important;
     flex: 0 0 auto !important;
     padding: 10px 12px max(10px, env(safe-area-inset-bottom)) !important;
-    background: #ffffff !important;
+    background: var(--flor-white) !important;
   }
 
   html.flor-mobile-chat-open .chat-input textarea,
@@ -609,6 +794,16 @@ html.flor-mobile-chat-open body {
   }
 }
 
+/* Un iPad vertical mide 768-1024px CSS, o sea que cae del lado de escritorio: Safari le hace
+   auto-zoom a cualquier campo de menos de 16px y deja LA TIENDA zoomeada después de cerrar el
+   chat. `pointer: coarse` no matchea un notebook con mouse, así que el escritorio queda igual. */
+@media (pointer: coarse) {
+  .n8n-chat .chat-input textarea,
+  .n8n-chat .chat-input input[type="text"],
+  .n8n-chat .chat-footer textarea,
+  .n8n-chat .flor-order-input { font-size: 16px !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .chat-window-toggle,
   .flor-preview-bubble,
@@ -619,4 +814,12 @@ html.flor-mobile-chat-open body {
     transition: none !important;
     scroll-behavior: auto !important;
   }
+  /* La animación de los puntitos vive en los HIJOS: apagarla en el contenedor no hacía nada y
+     los tres puntos rebotaban en loop. */
+  .chat-message-typing .chat-message-typing-circle { animation: none !important; }
+  .flor-add-btn,
+  .flor-order-btn,
+  .chat-input-send-button,
+  .chat-input button,
+  .chat-footer button[type="submit"] { transition: none !important; }
 }
