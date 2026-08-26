@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.2.0
+ * Versión: 1.3.0
  * Fecha:   2026-08-25
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -158,7 +158,7 @@ function setMobileChatEnvironment(isOpen) {
   const chatWindow = document.querySelector('.chat-window');
   if (chatWindow) {
     chatWindow.setAttribute('role', 'dialog');
-    chatWindow.setAttribute('aria-label', 'Chat de ALTO MATE®');
+    chatWindow.setAttribute('aria-label', 'Chat de ALTO MATÉ');
     if (mobileOpen) chatWindow.setAttribute('aria-modal', 'true');
     else chatWindow.removeAttribute('aria-modal');
   }
@@ -260,8 +260,8 @@ createChat({
   },
   i18n: {
     en: {
-      title:               'Flor',
-      subtitle:            isOnline ? 'ALTO MATE® · Atención' : 'ALTO MATE® · Respondo ahora',
+      title:               'FLOR',
+      subtitle:            isOnline ? 'ALTO MATÉ · En línea' : 'ALTO MATÉ · Respondo ahora',
       inputPlaceholder:    'Escribí tu consulta...',
       getStarted:          'Iniciar chat',
       closeButtonTooltip:  'Cerrar'
@@ -281,10 +281,10 @@ function injectHeader() {
   const textDiv = document.createElement('div');
   textDiv.className = 'flor-header-text';
   textDiv.innerHTML = `
-    <div class="flor-header-title">Flor</div>
+    <div class="flor-header-title">FLOR</div>
     <div class="flor-header-subtitle">
       <span class="flor-dot"></span>
-      <span>ALTO MATE&reg; <span class="flor-sep">&#9670;</span> ${isOnline ? 'ATENCIÓN' : 'RESPONDO AHORA'}</span>
+      <span>ALTO MATÉ <span class="flor-sep">&#9670;</span> ${isOnline ? 'EN LÍNEA' : 'RESPONDO AHORA'}</span>
     </div>`;
 
   const closeBtn = document.createElement('button');

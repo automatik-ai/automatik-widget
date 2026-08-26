@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.2.0
+ * Versión: 1.3.0
  * Fecha:   2026-08-25
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
@@ -27,10 +27,27 @@
   --flor-gray:       #666666;   /* secundario y placeholders — 5,13:1 sobre cream */
   --flor-gray-soft:  #888888;   /* SÓLO decorativo (punto offline). No para texto. */
   --flor-line:       #e8e3d6;   /* bordes y divisorias */
-  --flor-sage:       #81a080;   /* acento de marca: decorativo (punto, foco, avatar) */
-  --flor-sage-ink:   #546f53;   /* relleno de lo que lleva texto blanco — 5,56:1, AA */
-  --flor-sage-deep:  #3e523d;   /* sombra sólida del CTA (firma de marca) */
-  --flor-sage-pale:  #f0f5f0;   /* hover de chips */
+  /* El verde de la marca, con el croma subido (saturación 14 → 26 %) y el brillo casi quieto:
+     así deja de leerse grisáceo y el texto BLANCO encima se sigue leyendo. Si además se
+     aclarara, habría que pasar toda la tinta del chat a oscura. */
+  /* Oscurecido respecto del abanico: sus tres usos (borde del campo enfocado, borde de
+     chip y puntos del "escribiendo") viven sobre cream, y el indicador de foco necesita 3:1.
+     El sage de producción tampoco llegaba (2,58:1); acá queda en 3,20:1. */
+  --flor-sage:       #549654;   /* decorativo: foco, borde de chip activo — 3,20:1 sobre cream */
+  --flor-sage-ink:   #467746;   /* relleno de lo que lleva texto blanco — 5,27:1, AA */
+  --flor-sage-deep:  #325d32;   /* sombra sólida del CTA (firma de marca) */
+  --flor-sage-pale:  #eff6ef;   /* hover de chips */
+
+  /* El punto de "en línea" NO es el verde de la marca: es un semáforo, y por eso pintado con
+     el acento se veía apagado. Es el mismo de la ficha de producto (`.am-stock-dot`), halo y
+     respiración de 3 s incluidos. */
+  --flor-online:      #22c55e;
+  --flor-online-halo: rgba(34, 197, 94, 0.20);
+  --flor-online-aura: rgba(34, 197, 94, 0.08);
+
+  /* El ring de foco estaba escrito como el rgba del sage viejo, así que no seguía al verde. */
+  --flor-ring:        rgba(105, 171, 105, 0.20);
+  --flor-ring-strong: rgba(105, 171, 105, 0.50);
   --flor-alert:      #e25a3d;   /* borde y ring de error, badge — no-texto */
   --flor-alert-ink:  #c1442a;   /* texto de error — 5,09:1 sobre blanco */
   --flor-disabled:   #cfc9bb;   /* controles deshabilitados */
@@ -144,12 +161,20 @@
    acentos verdes en seis palabras se leen como ruido. */
 .flor-sep { color: rgba(255, 255, 255, 0.35); font-size: 7px; letter-spacing: 0; margin: 0 2px; vertical-align: 1.5px; }
 .flor-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--flor-sage); flex-shrink: 0;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--flor-online); flex-shrink: 0;
+  box-shadow: 0 0 0 3px var(--flor-online-halo);
+  animation: florLatido 3s ease-in-out infinite;
+}
+@keyframes florLatido {
+  0%, 100% { box-shadow: 0 0 0 3px var(--flor-online-halo); }
+  50%      { box-shadow: 0 0 0 6px var(--flor-online-aura); }
 }
 /* Fuera de horario el bot contesta igual (medido: 4 de 4 mensajes nocturnos respondidos, p50
    4,8 s). El punto no se apaga: cambia de tono. */
-html.flor-offline .flor-dot { background: var(--flor-gray-soft); }
+html.flor-offline .flor-dot {
+  background: var(--flor-gray-soft); box-shadow: none; animation: none;
+}
 
 .flor-close-btn {
   margin-left: auto;
@@ -367,7 +392,7 @@ html.flor-mobile-chat-open body {
 .chat-input textarea:focus, .chat-input input:focus {
   border-color: var(--flor-sage) !important;
   background: var(--flor-white) !important;
-  box-shadow: 0 0 0 3px rgba(129, 160, 128, 0.18) !important;
+  box-shadow: 0 0 0 3px var(--flor-ring) !important;
 }
 .chat-input textarea::placeholder,
 .chat-footer textarea::placeholder,
@@ -518,7 +543,7 @@ html.flor-mobile-chat-open body {
 .flor-order-input:focus {
   border-color: var(--flor-sage) !important;
   background: var(--flor-white) !important;
-  box-shadow: 0 0 0 3px rgba(129, 160, 128, 0.18) !important;
+  box-shadow: 0 0 0 3px var(--flor-ring) !important;
 }
 /* El rojo de marca se queda en el borde, que como elemento no-textual necesita 3:1 y da 3,64:1;
    el TEXTO del error va al tono oscuro, porque #e25a3d sobre blanco falla AA. */
@@ -579,7 +604,7 @@ html.flor-mobile-chat-open body {
 }
 .flor-preview-bubble:hover { background: var(--flor-cream-soft); }
 .flor-preview-bubble:focus-visible {
-  outline: 3px solid rgba(129, 160, 128, 0.45);
+  outline: 3px solid var(--flor-ring-strong);
   outline-offset: 3px;
 }
 
@@ -592,7 +617,7 @@ html.flor-mobile-chat-open body {
 .flor-quick-btn:focus-visible, .flor-add-btn:focus-visible,
 .flor-order-btn:focus-visible, .flor-cart-action:focus-visible,
 .chat-input-send-button:focus-visible {
-  outline: 3px solid rgba(129, 160, 128, 0.45); outline-offset: 2px;
+  outline: 3px solid var(--flor-ring-strong); outline-offset: 2px;
 }
 /* Vive sobre el header negro: el ring sage no se vería. */
 .flor-close-btn:focus-visible {
@@ -807,6 +832,7 @@ html.flor-mobile-chat-open body {
 @media (prefers-reduced-motion: reduce) {
   .chat-window-toggle,
   .flor-preview-bubble,
+  .flor-dot,
   .flor-badge,
   .chat-message-typing,
   .chat-messages-list {
