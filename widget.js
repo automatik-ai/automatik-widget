@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.3.0
+ * Versión: 1.3.1
  * Fecha:   2026-08-25
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
@@ -731,6 +731,140 @@ function markAndCleanStatusMessages() {
   });
 }
 
+/* ── Datos copiables ────────────────────────────────────── */
+// La tienda bloquea copiar con un `user-select: none` global más `selectstart`/`contextmenu`
+// en preventDefault, y eso alcanza a las burbujas del chat: el cliente NO puede copiar el
+// número de seguimiento ni el mail de soporte que le da Flor. Ganarle a esos handlers desde
+// acá se puede, pero se rompe el día que alguien toque el theme, y en el celular seleccionar
+// 19 dígitos a dedo dentro de una burbuja es un suplicio igual. Así que el dato deja de ser
+// texto para seleccionar y pasa a ser un botón.
+//
+// Medido sobre 337 respuestas reales: el mail aparece en el 27,9 % y el seguimiento en el
+// 4,2 %. Los 9 números de seguimiento distintos son TODOS de 19 dígitos con prefijo 93621, y
+// no hay ningún otro número de 17+ dígitos en las respuestas: por eso alcanza con detectarlo
+// por forma, sin pedirle al bot que emita un marcador.
+const COPIABLES = [
+  { tipo: 'seguimiento', rx: /\b\d{17,22}\b/g,                    mono: true  },
+  { tipo: 'mail',        rx: /[a-z0-9._%+-]+@altomatee\.com\.ar/gi, mono: false },
+];
+const OCA_SEGUIMIENTOS = 'https://www.oca.com.ar/Busquedas/Seguimientos';
+
+const ICONO_COPIAR = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1Zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H8V7h11v14Z"/></svg>';
+const ICONO_LISTO  = '<svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true"><path fill="currentColor" d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17Z"/></svg>';
+
+// El portapapeles moderno pide contexto seguro y gesto del usuario; el click lo es. El
+// fallback necesita `user-select: text` PROPIO: si no, el bloqueo global de la tienda le pega
+// justo al textarea que usamos para copiar y falla en silencio.
+async function florCopiar(texto) {
+  try {
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(texto);
+      return true;
+    }
+  } catch (_) { }
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = texto;
+    ta.setAttribute('readonly', '');
+    ta.style.cssText = 'position:fixed;top:-1000px;left:-1000px;opacity:0;user-select:text!important;-webkit-user-select:text!important;';
+    document.body.appendChild(ta);
+    ta.select();
+    ta.setSelectionRange(0, texto.length);
+    const ok = document.execCommand('copy');
+    ta.remove();
+    return ok;
+  } catch (_) { return false; }
+}
+
+function florChipCopiable(valor, tipo, mono) {
+  const chip = document.createElement('span');
+  chip.className = 'flor-copy' + (mono ? ' flor-copy-mono' : '');
+  chip.setAttribute('role', 'button');
+  chip.setAttribute('tabindex', '0');
+  chip.setAttribute('aria-label', 'Copiar ' + (tipo === 'mail' ? 'el mail' : 'el número de seguimiento') + ': ' + valor);
+  chip.dataset.florValor = valor;
+  chip.innerHTML = '<span class="flor-copy-txt"></span><span class="flor-copy-ico">' + ICONO_COPIAR + '</span>';
+  chip.querySelector('.flor-copy-txt').textContent = valor;
+
+  let volviendo;
+  const copiar = async () => {
+    const ok = await florCopiar(valor);
+    const txt = chip.querySelector('.flor-copy-txt');
+    const ico = chip.querySelector('.flor-copy-ico');
+    // Sin confirmación visible el cliente toca dos veces y no sabe si funcionó.
+    chip.classList.add(ok ? 'flor-copy-ok' : 'flor-copy-fallo');
+    txt.textContent = ok ? '¡Copiado!' : 'Copialo a mano';
+    ico.innerHTML = ok ? ICONO_LISTO : ICONO_COPIAR;
+    clearTimeout(volviendo);
+    volviendo = setTimeout(() => {
+      chip.classList.remove('flor-copy-ok', 'flor-copy-fallo');
+      txt.textContent = valor;
+      ico.innerHTML = ICONO_COPIAR;
+    }, 2000);
+  };
+  chip.addEventListener('click', copiar);
+  chip.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); copiar(); }
+  });
+  return chip;
+}
+
+function injectCopyables() {
+  document.querySelectorAll('.chat-message-from-bot .chat-message-markdown:not([data-flor-copy])').forEach(markdown => {
+    markdown.dataset.florCopy = '1';
+
+    // Se camina por nodos de TEXTO: tocar innerHTML rompería los <a> que ya armó markdown-it.
+    const paseo = document.createTreeWalker(markdown, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => (n.parentElement.closest('a, .flor-copy'))
+        ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT,
+    });
+    const textos = [];
+    for (let n = paseo.nextNode(); n; n = paseo.nextNode()) textos.push(n);
+
+    let hubo = null;
+    for (const nodo of textos) {
+      const original = nodo.nodeValue;
+      let corte = 0;
+      const frag = document.createDocumentFragment();
+      const golpes = [];
+      for (const { tipo, rx, mono } of COPIABLES) {
+        rx.lastIndex = 0;
+        for (let m = rx.exec(original); m; m = rx.exec(original)) {
+          golpes.push({ inicio: m.index, fin: m.index + m[0].length, valor: m[0], tipo, mono });
+        }
+      }
+      if (!golpes.length) continue;
+      golpes.sort((a, b) => a.inicio - b.inicio);
+
+      for (const g of golpes) {
+        if (g.inicio < corte) continue;                       // solapados: gana el primero
+        if (g.inicio > corte) frag.appendChild(document.createTextNode(original.slice(corte, g.inicio)));
+        frag.appendChild(florChipCopiable(g.valor, g.tipo, g.mono));
+        corte = g.fin;
+        if (g.tipo === 'seguimiento') hubo = g.valor;
+      }
+      if (corte < original.length) frag.appendChild(document.createTextNode(original.slice(corte)));
+      nodo.parentNode.replaceChild(frag, nodo);
+    }
+
+    // El link que da Flor es genérico (no lleva el número), así que el flujo real del cliente
+    // es copiar → abrir → pegar. El atajo hace los dos primeros pasos de un toque.
+    if (hubo && !markdown.querySelector('.flor-copy-oca')) {
+      const fila = document.createElement('div');
+      fila.className = 'flor-copy-acciones';
+      const a = document.createElement('a');
+      a.className = 'flor-copy-oca';
+      a.href = OCA_SEGUIMIENTOS;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = 'Copiar y abrir OCA →';
+      a.addEventListener('click', () => { florCopiar(hubo); });
+      fila.appendChild(a);
+      markdown.appendChild(fila);
+    }
+  });
+}
+
 /* ── Observer principal ─────────────────────────────────── */
 let florCardDebounce;
 let florHydrationFrame = null;
@@ -746,7 +880,7 @@ function hydrateWidget() {
   openLinksInNewTab();
   markAndCleanStatusMessages();
   clearTimeout(florCardDebounce);
-  florCardDebounce = setTimeout(injectProductCards, 500);
+  florCardDebounce = setTimeout(() => { injectProductCards(); injectCopyables(); }, 500);
   trackUserMessages();
   injectToggleIcon();
   animateToggle();

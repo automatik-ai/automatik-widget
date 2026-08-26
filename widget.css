@@ -1,6 +1,6 @@
 /**
  * automatik-widget / widget.css
- * Versión: 1.3.0
+ * Versión: 1.3.1
  * Fecha:   2026-08-25
  * Descripción: Estilos del chat Flor para Alto Maté.
  *              Cargado vía GitHub Pages, reemplaza CSS embebido en theme.liquid.
@@ -450,6 +450,43 @@ html.flor-mobile-chat-open body {
   background: var(--flor-sage-pale); border-color: var(--flor-sage); color: var(--flor-ink);
 }
 
+/* ── Datos copiables ────────────────────────────────────── */
+/* El dato que el cliente tiene que llevarse (seguimiento, mail) deja de ser texto plano —que
+   la tienda no lo deja seleccionar— y pasa a ser un botón. Se ve como dato, no como CTA: el
+   relleno sólido del sistema está reservado para lo que vende. */
+.flor-copy {
+  display: inline-flex; align-items: center; gap: 5px;
+  vertical-align: baseline;
+  background: var(--flor-cream-soft); border: 1px solid var(--flor-line);
+  border-radius: 5px; padding: 1px 6px; margin: 0 1px;
+  color: var(--flor-ink); cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  /* La tienda pone user-select:none global; acá adentro no molesta, pero si alguien igual
+     quiere seleccionar a mano que pueda. */
+  user-select: text; -webkit-user-select: text;
+}
+.flor-copy:hover { background: var(--flor-sage-pale); border-color: var(--flor-sage); }
+.flor-copy:focus-visible { outline: 3px solid var(--flor-ring-strong); outline-offset: 2px; }
+.flor-copy-mono .flor-copy-txt {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92em; letter-spacing: 0.2px;
+}
+.flor-copy-ico { display: inline-flex; color: var(--flor-gray); flex-shrink: 0; }
+.flor-copy-ok { background: var(--flor-sage-pale); border-color: var(--flor-sage); }
+.flor-copy-ok .flor-copy-txt { font-weight: 700; color: var(--flor-sage-ink); font-family: inherit; letter-spacing: 0; }
+.flor-copy-ok .flor-copy-ico { color: var(--flor-sage-ink); }
+.flor-copy-fallo { border-color: var(--flor-alert); }
+.flor-copy-fallo .flor-copy-txt { color: var(--flor-alert-ink); font-family: inherit; }
+
+.flor-copy-acciones { margin-top: 8px; }
+.flor-copy-oca {
+  display: inline-block; font-size: 11px; font-weight: 700;
+  letter-spacing: 1.4px; text-transform: uppercase;
+  color: var(--flor-link) !important; text-decoration: none !important;
+  border-bottom: 2px solid var(--flor-sage); padding-bottom: 1px;
+}
+.flor-copy-oca:hover { border-bottom-color: var(--flor-sage-ink); }
+
 /* ── Toggle (botón flotante) ────────────────────────────── */
 .chat-powered-by { display: none !important; }
 
@@ -843,6 +880,7 @@ html.flor-mobile-chat-open body {
   /* La animación de los puntitos vive en los HIJOS: apagarla en el contenedor no hacía nada y
      los tres puntos rebotaban en loop. */
   .chat-message-typing .chat-message-typing-circle { animation: none !important; }
+  .flor-copy,
   .flor-add-btn,
   .flor-order-btn,
   .chat-input-send-button,
