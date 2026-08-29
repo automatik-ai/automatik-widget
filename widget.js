@@ -1,7 +1,7 @@
 /**
  * automatik-widget / widget.js
- * Versión: 1.3.1
- * Fecha:   2026-08-25
+ * Versión: 1.3.2
+ * Fecha:   2026-08-29
  * Descripción: Chat Flor para Alto Maté — JS completo cargado externamente.
  *              Lee config Shopify desde window.FlorShopifyConfig (inyectado por theme.liquid).
  *              Incluye: init del chat n8n, header custom, quick replies,
@@ -449,26 +449,34 @@ function stripMarker(container, pattern) {
 
 /* ── Tarjetas de producto ───────────────────────────────── */
 const PRODUCT_CARD_PATTERN = /\[\[PRODUCT_CARD:([^\s:[\]]+):([0-9]+)\]\]/i;
+// La misma, con `g`, SÓLO para recorrer todas las coincidencias del mensaje.
+// ⚠️ No usar ésta en stripMarker: ahí el pattern pasa por `test()` dentro de un while y un
+// regex global es stateful (lastIndex avanza entre llamadas), así que saltearía nodos de texto.
+const PRODUCT_CARD_PATTERN_ALL = /\[\[PRODUCT_CARD:([^\s:[\]]+):([0-9]+)\]\]/gi;
 
 async function injectProductCards() {
   document.querySelectorAll('.chat-message-from-bot:not([data-flor-card-checked])').forEach(async message => {
     const markdown = message.querySelector('.chat-message-markdown');
     if (!markdown) return;
-    const match = markdown.textContent.match(PRODUCT_CARD_PATTERN);
-    if (!match) { message.dataset.florCardChecked = '1'; return; }
+    // TODAS las tarjetas del mensaje, no sólo la primera: una compra de pack son 3 o 4
+    // productos, y con una por mensaje el cliente necesita un turno para ver cada uno.
+    const matches = [...markdown.textContent.matchAll(PRODUCT_CARD_PATTERN_ALL)];
+    if (!matches.length) { message.dataset.florCardChecked = '1'; return; }
     message.dataset.florCardChecked = '1';
 
+    for (const match of matches) {
     const handle    = match[1];
     const variantId = match[2];
+    // Sin `g`: cada llamada borra el primer marcador que queda, que es el que se acaba de leer.
     stripMarker(markdown, PRODUCT_CARD_PATTERN);
 
     try {
       const root     = window.Shopify?.routes?.root || '/';
       const response = await fetch(root + 'products/' + encodeURIComponent(handle) + '.js');
-      if (!response.ok) return;
+      if (!response.ok) continue;   // el siguiente marcador puede estar bien
       const product = await response.json();
       const variant  = (product.variants || []).find(v => String(v.id) === variantId && v.available);
-      if (!variant) return;
+      if (!variant) continue;        // agotada: se saltea, las otras siguen
 
       const card = document.createElement('div');
       card.className = 'flor-product-card';
@@ -566,6 +574,7 @@ async function injectProductCards() {
       trackFlorEvent('producto_recomendado',   { product_handle: handle, variant_id: variantId });
       trackFlorEvent('tarjeta_producto_vista', { product_handle: handle, variant_id: variantId });
     } catch (_) {}
+    }
   });
 }
 
