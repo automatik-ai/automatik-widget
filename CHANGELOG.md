@@ -1,5 +1,46 @@
 # Changelog — automatik-widget
 
+## v1.3.2 — 2026-08-29
+
+### Cambios
+- `widget.js`: el chat dibuja **todas** las tarjetas del mensaje, no sólo la primera.
+  `PRODUCT_CARD_PATTERN` no tenía flag `g` y se usaba con `.match()`, que devuelve una sola
+  coincidencia: si el bot emitía dos marcadores, se renderizaba la primera tarjeta y la segunda
+  le quedaba al cliente **escrita como texto crudo** (`[[PRODUCT_CARD:…]]`) en la burbuja. Por eso
+  el prompt de Flor tiene la orden "Solo una tarjeta por respuesta", y por eso una compra de pack
+  necesita un turno por producto. Con la promo de packs (3 unidades = $10.000 menos) esa es la
+  conversación más cara: medido el 29/8, una sesión usó 4 turnos para ver 3 diseños y otra se
+  comió el rate limit del bot en el mensaje 12 con 3 mates en el carrito.
+- `widget.js`: los dos `return` de adentro del `try` de `injectProductCards` pasan a `continue`.
+  Cortaban la función entera, así que si la **primera** variante estaba agotada o su handle no
+  existía se perdían **todas** las tarjetas del mensaje. Medido con jsdom: en ese caso el código
+  anterior dibuja 0 tarjetas aunque las siguientes estén disponibles.
+
+### Detalle de implementación
+- Se agrega `PRODUCT_CARD_PATTERN_ALL` (la misma expresión con `g`) **sólo** para `matchAll`.
+  ⚠️ El pattern sin `g` se conserva y se sigue usando en `stripMarker`: ese helper hace
+  `pattern.test(nodo)` dentro de un `while`, y un regex global es stateful (`lastIndex` avanza
+  entre llamadas), así que pasarle el global saltearía uno de cada dos nodos de texto.
+- `stripMarker` se llama una vez por vuelta del `for`, con el pattern sin `g`: cada llamada borra
+  el primer marcador que queda, que es justo el que se acaba de dibujar.
+
+### Probado
+Con jsdom y un Shopify falso, corriendo la función real de las dos versiones sobre los mismos
+mensajes — 5/5:
+
+| caso | antes | después |
+|---|---|---|
+| una tarjeta (lo de siempre) | 1 | 1 — sin regresión |
+| tres marcadores (compra de pack) | 1 + marcador crudo a la vista | 3, burbuja limpia |
+| dos, la primera agotada | 0 | 1 |
+| dos, la primera con handle inexistente | 0 | 1 |
+| sin marcadores | 0 | 0 |
+
+### Pendiente del lado del bot (n8n `NOmAW8DMMDzVVBOb`)
+Mientras esto no esté en producción, el prompt de Flor tiene que seguir diciendo "Solo una
+tarjeta por respuesta". Recién cuando el widget lo soporte se le saca esa línea y se le enseña a
+mandar 2-3 juntas. Es un cambio aparte, no sale solo con este merge.
+
 ## v1.2.0 — 2026-08-25
 
 ### Cambios
